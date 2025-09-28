@@ -1,0 +1,113 @@
+/* Touch-friendly styles */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Prevent text selection during gestures */
+.gesture-container {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Smooth scrolling for better gesture experience */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Prevent zoom on double tap */
+* {
+  touch-action: manipulation;
+}
+
+/* Gesture feedback animations */
+@keyframes swipe-indication {
+  0% { transform: translateX(0); opacity: 1; }
+  50% { transform: translateX(10px); opacity: 0.7; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+.swipe-hint {
+  animation: swipe-indication 2s ease-in-out infinite;
+}
+
+/* Pull-to-refresh animations */
+@keyframes pull-bounce {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+  100% { transform: translateY(0); }
+}
+
+.pull-indicator {
+  animation: pull-bounce 1s ease-in-out infinite;
+}
+
+/* Mobile-specific improvements */
+@media (max-width: 768px) {
+  /* Larger touch targets on mobile */
+  button, .touch-target {
+    min-height: 48px;
+    min-width: 48px;
+  }
+  
+  /* Better spacing for finger navigation */
+  .mobile-spacing {
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  
+  /* Optimized text size for mobile reading */
+  .mobile-text {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+}
+
+/* Haptic feedback visual cue */
+@keyframes haptic-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.haptic-feedback {
+  animation: haptic-pulse 0.2s ease-out;
+}
+
+/* Swipe gesture visual indicators */
+.swipe-area {
+  position: relative;
+  overflow: hidden;
+}
+
+.swipe-area::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  transition: left 0.5s ease-out;
+}
+
+.swipe-area.swiping::before {
+  left: 100%;
+}
+
+/* Loading states for gesture interactions */
+.gesture-loading {
+  pointer-events: none;
+  opacity: 0.7;
+  cursor: wait;
+}
+
+/* Improved focus states for accessibility */
+button:focus-visible,
+.touch-target:focus-visible {
+  outline: 2px solid #0066cc;
+  outline-offset: 2px;
+}
