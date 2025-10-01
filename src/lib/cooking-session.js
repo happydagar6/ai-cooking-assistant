@@ -11,6 +11,7 @@ export class CookingSessionService {
             .eq("recipe_id", recipeId)
             .eq("status", 'active');
 
+            // Start a new session
             const { data, error } = await supabase
             .from("cooking_sessions")
             .insert({
