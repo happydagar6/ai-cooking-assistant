@@ -1,5 +1,4 @@
 "use client"
-
 import { useAuth } from "@/lib/auth-context";
 import { 
   useAnalyticsOverview,
@@ -8,27 +7,22 @@ import {
   useAnalyticsSessions,
   useFavoriteRecipes 
 } from "@/hooks/use-optimized-queries";
-import { useEffect, useState } from "react";
 
 // UI Components
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "./ui/card"
 import {
   Activity,
-  Award,
-  BookOpen,
   ChefHat,
   Clock,
   Heart,
   RefreshCw,
   Target,
   Timer,
-  TrendingUp,
   Users,
 } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs"

@@ -10,7 +10,14 @@ import { persist } from 'zustand/middleware'
 
 export const useCookingStore = create(
 
-  // Persist certain parts of the store to localStorage for user preferences and voice settings. What is persist in zustand?: Persist is a middleware in Zustand that allows you to save and rehydrate state from localStorage (or other storage) automatically. This is useful for maintaining user preferences and session data across page reloads.
+  // Persist certain parts of the store to localStorage for user preferences and voice 
+  // settings. What is persist in zustand?: Persist is a middleware in Zustand that 
+  // allows you to save and rehydrate state from localStorage (or other storage) 
+  // automatically. This is useful for maintaining user preferences and session data 
+  // across page reloads. Why using localStorage here?: localStorage is used here to 
+  // persist user preferences and voice settings so that they are retained even when 
+  // the user refreshes the page or closes and reopens the browser. This enhances the 
+  // user experience by keeping their settings consistent across sessions.
   persist(
     (set, get) => ({
       // User state

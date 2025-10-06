@@ -159,7 +159,7 @@ export class OpenAIService {
           { role: "system", content: systemPrompt },
           { role: "user", content: query },
         ],
-        max_completion_tokens: 500,
+        max_completion_tokens: 800,
         temperature: 0.5,
         prompt_cache_key: `cooking-tips-${query.slice(0, 20)}`, // Cache key based on query
       });

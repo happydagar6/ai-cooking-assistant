@@ -400,7 +400,7 @@ export default function CookingModePage() {
             onStart: () => setIsPlaying(true)
           })
         }
-      }, 500) // 500ms delay to ensure audio system is ready
+      }, 700) // 700ms delay to ensure audio system is ready
     }
   }
 

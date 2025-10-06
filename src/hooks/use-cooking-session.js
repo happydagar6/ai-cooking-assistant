@@ -156,7 +156,7 @@ export function useCookingSession(recipe) {
       } catch (err) {
         console.error("Failed to auto-save cooking session:", err);
       }
-    }, 30000); // Auto-save every 30 seconds.
+    }, 40000); // Auto-save every 40 seconds.
 
     return () => clearInterval(autoSaveInterval);
   }, [session, isSessionActive, elapsedTime]);

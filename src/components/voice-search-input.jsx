@@ -29,7 +29,7 @@ export function VoiceSearchInput({ onSearch, placeholder, isLoading = false }) {
   // Handle Enter key press in input field
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
-      handleSearch()
+      handleSearch();
     }
   }
 

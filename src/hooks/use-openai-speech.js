@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useRef, useState } from "react"
+import { toast } from "sonner";
 
 export function useOpenAITextToSpeech() {
     const [isSpeaking, setIsSpeaking] = useState(false);
@@ -45,8 +46,6 @@ export function useOpenAITextToSpeech() {
             const audio = new Audio(audioUrl);
             audioRef.current = audio;
 
-            // Set up event handlers
-
             // Handle audio load start
             audio.onloadstart = () => {
                 console.log('Audio loadstart event fired')
@@ -56,7 +55,7 @@ export function useOpenAITextToSpeech() {
 
             // Handle audio can play
             audio.oncanplay = () => {
-                console.log('Audio canplay event fired')
+                toast.success('Audio canplay event fired')
             }
 
             // Handle audio play start
