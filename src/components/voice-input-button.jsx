@@ -5,8 +5,8 @@ import { Mic, MicOff, AlertCircle } from "lucide-react"
 import { useVoiceRecognition } from "@/hooks/use-voice-recognition"
 import { useEffect } from "react"
 
-export function VoiceInputButton({ onTranscript, onError, disabled = false, size = "default", variant = "outline" }) {
-  const { isListening, isStopping, transcript, finalTranscript, error, isSupported, startListening, stopListening, resetTranscript } =
+export function VoiceInputButton({ onTranscript, onError, disabled = false, size = "default", variant = "outline", persistent = false }) {
+  const { isListening, isStopping, transcript, finalTranscript, error, isSupported, persistentMode, startListening, stopListening, resetTranscript } =
     useVoiceRecognition();
 
 
@@ -20,8 +20,15 @@ export function VoiceInputButton({ onTranscript, onError, disabled = false, size
 
   useEffect(() => {
     if (finalTranscript && onTranscript) {
-      onTranscript(finalTranscript)
-      resetTranscript()
+      const command = finalTranscript.toLowerCase().trim();
+      const isStopCommand = command.includes("stop voice") || command.includes("stop listening") || 
+                          command.includes("stop command") || command === "stop";
+      
+      // Always call onTranscript with the command
+      onTranscript(finalTranscript);
+      
+      // Immediately reset transcript to prevent duplicates
+      resetTranscript();
     }
   }, [finalTranscript, onTranscript, resetTranscript])
 
@@ -32,7 +39,10 @@ export function VoiceInputButton({ onTranscript, onError, disabled = false, size
   // This guarantees that the latest error is always communicated to the parent component.
   useEffect(() => {
     if (error && onError) {
-      onError(error)
+      // Filter out normal operational "errors" that shouldn't be shown to users
+      if (error !== 'no-speech' && error !== 'aborted' && !error.includes('no-speech')) {
+        onError(error)
+      }
     }
   }, [error, onError])
 
@@ -46,6 +56,7 @@ export function VoiceInputButton({ onTranscript, onError, disabled = false, size
         continuous: true,
         interimResults: true,
         lang: "en-US",
+        persistent: persistent
       })
     }
   }
@@ -72,12 +83,12 @@ export function VoiceInputButton({ onTranscript, onError, disabled = false, size
       {isListening ? (
         <>
           <MicOff className="h-4 w-4 animate-pulse" />
-          {isStopping ? "Stopping..." : "Stop Listening"}
+          {isStopping ? "Stopping..." : persistentMode ? "Say 'Stop' to end" : "Stop Listening"}
         </>
       ) : (
         <>
           <Mic className="h-4 w-4" />
-          Use Voice
+          {persistent ? "Start Voice Control" : "Use Voice"}
         </>
       )}
     </Button>

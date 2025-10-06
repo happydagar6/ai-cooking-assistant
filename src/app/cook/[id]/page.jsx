@@ -49,6 +49,7 @@ export default function CookingModePage() {
   const [completedSteps, setCompletedSteps] = useState(new Set())
   const [showScalingCalculator, setShowScalingCalculator] = useState(false)
   const [scaledRecipe, setScaledRecipe] = useState(null)
+  const [lastCommandTime, setLastCommandTime] = useState(0) // Add command debouncing
   // New state for recipe data
   const [recipe, setRecipe] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -132,6 +133,7 @@ export default function CookingModePage() {
   // Handle TTS errors
   useEffect(() => {
     if (ttsError) {
+      console.log('TTS Error detected:', ttsError)
       showToast.error("Speech Error", ttsError)
     }
   }, [ttsError])
@@ -313,7 +315,8 @@ export default function CookingModePage() {
     }
   }
 
-  const stopTimer = () => {
+  const stopTimer = (announce = true) => {
+    const wasActive = isTimerActive
     setIsTimerActive(false)
     setTimeLeft(0)
     setTimer(null)
@@ -321,7 +324,8 @@ export default function CookingModePage() {
     // Track feature usage
     trackFeature('Timer', { action: 'stop' })
 
-    if (!isMuted && ttsSupported) {
+    // Only announce if timer was actually running and announce is true
+    if (announce && wasActive && !isMuted && ttsSupported) {
       speakTimer("Timer stopped")
     }
   }
@@ -329,58 +333,74 @@ export default function CookingModePage() {
   const nextStep = () => {
     if (currentStep < activeRecipe?.instructions?.length - 1) {
       triggerHapticFeedback('light')
-      // Stop current audio and reset playing state
-      stop()
+      
+      // Stop current audio and reset playing state FIRST
+      if (isSpeaking) {
+        stop()
+      }
       setIsPlaying(false)
       
+      // Update step state
       setCompletedSteps((prev) => new Set([...prev, currentStep]))
-      setCurrentStep(currentStep + 1)
-      stopTimer()
+      const nextStepIndex = currentStep + 1
+      setCurrentStep(nextStepIndex)
+      stopTimer(false) // Don't announce timer stop when changing steps
 
       // Track feature usage
       trackFeature('Next Step', {
-        step_number: currentStep + 1,
-        method: 'button_click'
+        step_number: nextStepIndex + 1,
+        method: 'voice_command'
       })
 
-      if (!isMuted && ttsSupported) {
-        const nextInstruction = activeRecipe.instructions[currentStep + 1]
-        speakRecipeStep(nextInstruction, {
-          onEnd: () => setIsPlaying(false),
-          onStart: () => setIsPlaying(true)
-        })
-      }
+      // Wait a moment before starting new audio to avoid conflicts
+      setTimeout(() => {
+        if (!isMuted && ttsSupported) {
+          const nextInstruction = activeRecipe.instructions[nextStepIndex]
+          speakRecipeStep(nextInstruction, {
+            onEnd: () => setIsPlaying(false),
+            onStart: () => setIsPlaying(true)
+          })
+        }
+      }, 500) // 500ms delay to ensure audio system is ready
     }
   }
 
   const prevStep = () => {
     if (currentStep > 0) {
       triggerHapticFeedback('light')
-      // Stop current audio and reset playing state
-      stop()
+      
+      // Stop current audio and reset playing state FIRST
+      if (isSpeaking) {
+        stop()
+      }
       setIsPlaying(false)
       
-      setCurrentStep(currentStep - 1)
+      // Update step state
+      const prevStepIndex = currentStep - 1
+      setCurrentStep(prevStepIndex)
       setCompletedSteps((prev) => {
         const newSet = new Set(prev)
-        newSet.delete(currentStep - 1)
+        newSet.delete(prevStepIndex)
         return newSet
       })
-      stopTimer()
+      stopTimer(false) // Don't announce timer stop when changing steps
 
       // Track feature usage
       trackFeature('Previous Step', {
-        step_number: currentStep - 1,
-        method: 'button_click'
+        step_number: prevStepIndex + 1,
+        method: 'voice_command'
       })
 
-      if (!isMuted && ttsSupported) {
-        const prevInstruction = activeRecipe.instructions[currentStep - 1]
-        speakRecipeStep(prevInstruction, {
-          onEnd: () => setIsPlaying(false),
-          onStart: () => setIsPlaying(true)
-        })
-      }
+      // Wait a moment before starting new audio to avoid conflicts
+      setTimeout(() => {
+        if (!isMuted && ttsSupported) {
+          const prevInstruction = activeRecipe.instructions[prevStepIndex]
+          speakRecipeStep(prevInstruction, {
+            onEnd: () => setIsPlaying(false),
+            onStart: () => setIsPlaying(true)
+          })
+        }
+      }, 500) // 500ms delay to ensure audio system is ready
     }
   }
 
@@ -406,13 +426,41 @@ export default function CookingModePage() {
 
   const handleVoiceCommand = (transcript) => {
     const command = transcript.toLowerCase().trim()
+    const now = Date.now()
+    
     console.log('Voice command received:', command) // Debug log
+    
+    // Filter out background noise and very short commands
+    if (command.length < 2 || command.match(/^[a-z]$/)) {
+      console.log('Command too short or invalid, ignoring:', command)
+      return
+    }
+    
+    // Filter out common non-command phrases
+    const commonNonCommands = ['step one', 'step two', 'step three', 'step four', 'step five', 'step six', 'step seven', 'step eight', 'step nine', 'step ten', 'step 1', 'step 2', 'step 3', 'step 4', 'step 5', 'step 6', 'step 7', 'step 8', 'step 9', 'step 0', 'um', 'uh', 'ah', 'oh', 'the', 'and', 'a', 'an', 'is', 'are', 'was', 'were']
+    if (commonNonCommands.includes(command)) {
+      console.log('Common non-command phrase ignored:', command)
+      return
+    }
+    
+    // Debounce commands - ignore if less than 2.5 seconds since last command
+    if (now - lastCommandTime < 2500) {
+      console.log('Command ignored due to debouncing:', command)
+      return
+    }
+    
+    setLastCommandTime(now)
 
     // Track voice command usage
     trackFeature('Voice Command', { command: transcript, parsed_action: 'unknown' })
 
-    // More flexible command matching
-    if (command.includes("next") || command.includes("continue") || command.includes("forward")) {
+    // More flexible command matching - prioritize voice control commands
+    if (command.includes("stop voice") || command.includes("stop listening") || command.includes("stop command")) {
+      console.log('Stopping voice commands');
+      trackFeature('Voice Command', { command: transcript, parsed_action: 'stop_voice' })
+      // Voice recognition will handle stopping itself
+      showToast.success("Voice Control Stopped", "Click the microphone to start again")
+    } else if (command.includes("next") || command.includes("continue") || command.includes("forward")) {
       console.log('Executing next step')
       trackFeature('Voice Command', { command: transcript, parsed_action: 'next_step' })
       nextStep()
@@ -446,25 +494,49 @@ export default function CookingModePage() {
       }
     } else if (command.includes("stop timer") || command.includes("cancel timer")) {
       console.log('Stopping timer')
+      trackFeature('Voice Command', { command: transcript, parsed_action: 'stop_timer' })
       stopTimer()
-    } else if (command.includes("play") || command.includes("start")) {
-      console.log('Playing audio')
-      if (!isSpeaking && !isMuted && ttsSupported) {
-        const currentInstruction = activeRecipe.instructions[currentStep]
-        speakRecipeStep(currentInstruction, {
-          onEnd: () => setIsPlaying(false),
-          onStart: () => setIsPlaying(true)
-        })
-      }
-    } else if (command.includes("pause") || command.includes("stop")) {
+    } else if (command.includes("pause") || (command === "stop" || command.includes("stop audio") || command.includes("stop playing"))) {
       console.log('Pausing audio')
+      trackFeature('Voice Command', { command: transcript, parsed_action: 'pause_audio' })
       if (isSpeaking) {
         stop()
         setIsPlaying(false)
       }
+    } else if (command.includes("play") || command.includes("start")) {
+      console.log('Playing audio - Voice command')
+      trackFeature('Voice Command', { command: transcript, parsed_action: 'play_audio' })
+      if (!isSpeaking && !isMuted && ttsSupported) {
+        const currentInstruction = activeRecipe.instructions[currentStep]
+        speakRecipeStep(currentInstruction, {
+          onEnd: () => {
+            console.log('Voice command TTS ended')
+            setIsPlaying(false)
+          },
+          onStart: () => {
+            console.log('Voice command TTS started')
+            setIsPlaying(true)
+          }
+        })
+      } else {
+        console.log('Cannot play audio - conditions not met:', {
+          isSpeaking,
+          isMuted,
+          ttsSupported
+        })
+      }
     } else {
       console.log('Command not recognized:', command)
-      showToast.info("Command not recognized", `Try saying: next, previous, repeat, ingredients, start timer, or stop timer`)
+      // Only show notification for commands that seem intentional and might be valid attempts
+      const seemsIntentional = command.length > 3 && 
+                              !command.includes('um') && 
+                              !command.includes('uh') && 
+                              !command.includes('step') &&
+                              !command.match(/\b(the|and|a|an|is|are|was|were|of|to|in|for|on|at|by|with)\b/)
+      
+      if (seemsIntentional) {
+        showToast.info("Command not recognized", `Try: next, previous, repeat, ingredients, or timers`)
+      }
     }
   }
 
@@ -771,12 +843,13 @@ export default function CookingModePage() {
                     onTranscript={handleVoiceCommand}
                     onError={(error) => console.error("Voice command error:", error)}
                     size="default"
+                    persistent={true}
                   />
                 </div>
 
                 <div className="text-center">
                   <p className="text-xs sm:text-sm text-muted-foreground px-2">
-                    Say: "next", "previous", "repeat", "ingredients", "start timer", "stop timer", "play", or "pause"
+                    Say: "next", "previous", "repeat", "ingredients", "timers", "play", "pause", or "stop voice"
                   </p>
                 </div>
               </CardContent>

@@ -17,7 +17,7 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type') || 'overview'
 
-    let data
+    let data;
     switch (type) {
       case 'overview':
         data = await getUserAnalytics(supabase, userId)
@@ -209,7 +209,7 @@ async function getMostUsedFeatures(supabase, userId) {
 
     if (error) throw error
 
-    const featureStats = {}
+    const featureStats = {};
     
     data.forEach(session => {
       const features = session.features_used || {}

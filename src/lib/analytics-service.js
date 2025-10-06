@@ -1,9 +1,6 @@
 "use client"
 
 class AnalyticsService {
-  constructor() {
-    // We'll use API routes instead of direct Supabase calls for better security and compatibility
-  }
 
   // Cooking Session Management
   async startCookingSession(recipeId, estimatedTime, totalSteps) {

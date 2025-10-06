@@ -49,26 +49,42 @@ export function useOpenAITextToSpeech() {
 
             // Handle audio load start
             audio.onloadstart = () => {
+                console.log('Audio loadstart event fired')
                 setIsLoading(false);
                 setIsSpeaking(true);
             }
 
+            // Handle audio can play
+            audio.oncanplay = () => {
+                console.log('Audio canplay event fired')
+            }
+
+            // Handle audio play start
+            audio.onplay = () => {
+                console.log('Audio play event fired')
+                if(options.onStart) options.onStart();
+            }
+
             // Handle audio end
             audio.onended = () => {
+                console.log('Audio ended event fired')
                 setIsSpeaking(false);
                 URL.revokeObjectURL(audioUrl);
                 if(options.onEnd) options.onEnd();
             }
 
             // Handle audio error
-            audio.onerror = () => {
+            audio.onerror = (e) => {
+                console.log('Audio error event fired:', e)
                 setError("Failed to play audio");
                 setIsSpeaking(false);
                 setIsLoading(false);
                 URL.revokeObjectURL(audioUrl);
             }
+            
+            console.log('About to play audio, blob size:', audioBlob.size, 'bytes')
             await audio.play();
-            if(options.onStart) options.onStart();
+            console.log('Audio.play() completed')
         } catch (error) {
             setError("Failed to generate speech");
             setIsLoading(false);
