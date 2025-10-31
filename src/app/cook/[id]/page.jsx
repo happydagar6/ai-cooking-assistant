@@ -1,6 +1,5 @@
 "use client"
 
-
 import { useCookingSession } from "@/hooks/use-cooking-session";
 import { FavoriteButton } from "@/components/favorite-button";
 import { useTouchGestures } from "@/hooks/use-touch-gestures";
@@ -28,6 +27,25 @@ import {
   Loader2,
   ArrowLeft,
   Square,
+  Sparkles,
+  Star,
+  Flame,
+  Target,
+  Zap,
+  Mic,
+  MicOff,
+  Heart,
+  TrendingUp,
+  Activity,
+  RotateCcw,
+  PlayCircle,
+  PauseCircle,
+  SkipBackIcon,
+  SkipForwardIcon,
+  ArrowRight,
+  Trophy,
+  Award,
+  Rocket,
 } from "lucide-react"
 import { VoiceInputButton } from "@/components/voice-input-button"
 import { VoiceRecipeReader } from "@/components/voice-recipe-reader"
@@ -272,10 +290,16 @@ export default function CookingModePage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-orange-50 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading recipe...</p>
+          <div className="relative inline-block mb-4">
+            <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center">
+              <ChefHat className="h-8 w-8 text-white animate-bounce" />
+            </div>
+            <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-300 rounded-full animate-ping" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Loading Recipe</h3>
+          <p className="text-gray-600 text-sm">Please wait...</p>
         </div>
       </div>
     )
@@ -284,18 +308,19 @@ export default function CookingModePage() {
   // Error state
   if (error || !recipe) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-orange-50 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6">
-          <div className="text-red-500 mb-4">
-            <ChefHat className="w-16 h-16 mx-auto mb-4 opacity-50" />
-            <h2 className="text-xl font-semibold mb-2">Recipe Not Available</h2>
-            <p className="text-gray-600 mb-4">
-              {error || "Unable to load recipe data"}
-            </p>
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <ChefHat className="h-8 w-8 text-red-600" />
           </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-3">Recipe Not Found</h2>
+          <p className="text-gray-600 mb-6 text-sm leading-relaxed">
+            {error || "Unable to load recipe data"}
+          </p>
           <Link href="/dashboard">
-            <Button>
-              ← Back to My Recipes
+            <Button className="bg-orange-500 hover:bg-orange-600 text-white rounded-lg px-4 py-2">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Recipes
             </Button>
           </Link>
         </div>
@@ -568,25 +593,31 @@ export default function CookingModePage() {
     <>
       {/* Show loading while authentication is loading */}
       {!isLoaded && (
-        <div className="min-h-screen flex items-center justify-center">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-orange-50 flex items-center justify-center">
           <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading...</p>
+            <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Loader2 className="h-6 w-6 text-white animate-spin" />
+            </div>
+            <h3 className="text-base font-medium text-gray-900 mb-1">Loading</h3>
+            <p className="text-gray-600 text-sm">Just a moment...</p>
           </div>
         </div>
       )}
 
       {/* Show error if not authenticated */}
       {isLoaded && !isSignedIn && (
-        <div className="min-h-screen flex items-center justify-center">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-orange-50 flex items-center justify-center">
           <div className="text-center max-w-md mx-auto p-6">
-            <h2 className="text-2xl font-bold mb-4">Authentication Required</h2>
-            <p className="text-muted-foreground mb-6">
-              Please sign in to view this recipe.
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <ChefHat className="h-8 w-8 text-blue-600" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-3">Sign In Required</h2>
+            <p className="text-gray-600 mb-6 text-sm leading-relaxed">
+              Please sign in to access your cooking sessions.
             </p>
             <Link 
               href="/search" 
-              className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90"
+              className="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to Search
@@ -597,23 +628,29 @@ export default function CookingModePage() {
 
       {/* Show loading while recipe is loading */}
       {isLoaded && isSignedIn && isLoading && (
-        <div className="min-h-screen flex items-center justify-center">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-orange-50 flex items-center justify-center">
           <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading recipe...</p>
+            <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <ChefHat className="h-8 w-8 text-white animate-bounce" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Loading Recipe</h3>
+            <p className="text-gray-600 text-sm">Please wait...</p>
           </div>
         </div>
       )}
 
       {/* Show error if recipe loading failed */}
       {isLoaded && isSignedIn && error && (
-        <div className="min-h-screen flex items-center justify-center">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-orange-50 flex items-center justify-center">
           <div className="text-center max-w-md mx-auto p-6">
-            <h2 className="text-2xl font-bold mb-4">Error</h2>
-            <p className="text-muted-foreground mb-6">{error}</p>
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <ChefHat className="h-8 w-8 text-red-600" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-3">Something Went Wrong</h2>
+            <p className="text-gray-600 mb-6 text-sm leading-relaxed">{error}</p>
             <Link 
               href="/search" 
-              className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90"
+              className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to Search
@@ -633,229 +670,241 @@ export default function CookingModePage() {
         pullDistance={pullDistance}
       />
       <div 
-        className="min-h-screen bg-gradient-to-br from-background to-muted gesture-container flex flex-col"
+        className="min-h-screen bg-gray-50 gesture-container flex flex-col"
         {...gestureHandlers}
         style={{
           paddingTop: isPulling ? Math.min(pullDistance, 80) : 0,
           transition: !isPulling ? 'padding-top 0.3s ease-out' : 'none'
         }}
       >
-      {/* Header */}
-      <header className="border-b bg-card/50 backdrop-blur-sm">
-        <div className="w-full px-2 sm:px-4 py-3">
-          <div className="flex items-center justify-between mb-3">
-            <Link href="/search" className="flex items-center gap-2 flex-shrink-0">
-              <ChefHat className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-              <h1 className="text-lg sm:text-2xl font-bold text-foreground">CookAI</h1>
+      {/* Clean Header */}
+      <header className="bg-white border-b border-gray-200">
+        <div className="w-full px-4 py-4">
+          {/* Top Bar */}
+          <div className="flex items-center justify-between mb-4">
+            <Link href="/search" className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
+                <ChefHat className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-lg font-semibold text-gray-900">CookAI</h1>
+                <p className="text-xs text-gray-500">Cooking Assistant</p>
+              </div>
             </Link>
             
-            {/* Mobile Session Timer and Status */}
-            <div className="flex items-center gap-2 sm:gap-3">
+            {/* Session Status */}
+            <div className="flex items-center gap-3">
               {isSessionActive && (
-                <div className="flex items-center gap-1 sm:gap-2 bg-green-100 dark:bg-green-900/20 px-2 sm:px-3 py-1 rounded-full">
-                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full animate-pulse" />
-                  <span className="text-xs sm:text-sm font-medium text-green-700 dark:text-green-300">
-                    {formattedElapsedTime}
-                  </span>
+                <div className="flex items-center gap-2 bg-gray-100 text-gray-700 px-3 py-1 rounded-lg border border-gray-300">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
+                  <span className="text-sm font-medium">{formattedElapsedTime}</span>
                 </div>
               )}
-              <Badge variant="secondary" className="text-xs sm:text-sm">Cooking Mode</Badge>
+              <Badge className="bg-gray-100 text-gray-700 border-gray-300">
+                <Flame className="h-3 w-3 mr-1" />
+                Cooking
+              </Badge>
             </div>
           </div>
           
-          {/* Mobile-optimized controls */}
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-            {/* Session Control - Most Important */}
+          {/* Recipe Title and Info */}
+          <div className="mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2 leading-tight">
+              {activeRecipe?.title}
+            </h2>
+            <div className="flex flex-wrap items-center gap-3 text-sm">
+              <div className="flex items-center gap-2 bg-gray-100 px-2 py-1 rounded-lg">
+                <Clock className="h-4 w-4 text-gray-600" />
+                <span className="text-gray-700">
+                  {(activeRecipe?.prepTime || 0) + (activeRecipe?.cookTime || 0)} min
+                </span>
+              </div>
+              <div className="flex items-center gap-2 bg-gray-100 px-2 py-1 rounded-lg">
+                <Users className="h-4 w-4 text-gray-600" />
+                <span className="text-gray-700">{activeRecipe?.servings} servings</span>
+              </div>
+              <div className="flex items-center gap-2 bg-gray-100 px-2 py-1 rounded-lg">
+                <Target className="h-4 w-4 text-gray-600" />
+                <span className="text-gray-700 capitalize">{activeRecipe?.difficulty}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Control Bar */}
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {/* Primary Session Control */}
             {!isSessionActive ? (
               <Button
                 onClick={handleStartCooking}
-                size="sm"
-                className="bg-green-600 hover:bg-green-700 text-white flex-shrink-0 order-1"
+                className="bg-orange-500 hover:bg-orange-600 text-white rounded-lg px-4 py-2"
               >
-                <Play className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                <span className="text-xs sm:text-sm">Start Session</span>
+                <PlayCircle className="h-4 w-4 mr-2" />
+                Start Session
               </Button>
             ) : (
               <Button
                 onClick={handleFinishCooking}
-                size="sm"
                 variant="outline"
-                className="border-green-600 text-green-600 hover:bg-green-50 flex-shrink-0 order-1"
+                className="border-orange-500 text-orange-600 hover:bg-orange-50 rounded-lg px-4 py-2"
               >
-                <Square className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                <span className="text-xs sm:text-sm">Finish Session</span>
+                <Trophy className="h-4 w-4 mr-2" />
+                Complete
               </Button>
             )}
             
-            {/* Secondary controls */}
+            {/* Secondary Controls */}
             <Button
               variant="outline"
-              size="sm"
               onClick={() => setShowScalingCalculator(!showScalingCalculator)}
-              className={`flex-shrink-0 order-2 ${showScalingCalculator ? "bg-primary text-primary-foreground" : ""}`}
+              className={`rounded-lg px-3 py-2 ${
+                showScalingCalculator 
+                  ? "bg-orange-500 text-white border-orange-500 hover:bg-orange-600" 
+                  : "border-gray-300 text-gray-600 hover:bg-gray-50"
+              }`}
             >
-              <Calculator className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="sr-only sm:not-sr-only sm:ml-1 text-xs">Scale</span>
+              <Calculator className="h-4 w-4 mr-1" />
+              Scale
             </Button>
             
             <Button 
               variant="outline" 
-              size="sm" 
               onClick={() => setIsMuted(!isMuted)}
-              className="flex-shrink-0 order-3"
+              className="border-gray-300 text-gray-600 hover:bg-gray-50 rounded-lg px-3 py-2"
             >
-              {isMuted ? <VolumeX className="h-3 w-3 sm:h-4 sm:w-4" /> : <Volume2 className="h-3 w-3 sm:h-4 sm:w-4" />}
-              <span className="sr-only sm:not-sr-only sm:ml-1 text-xs">Sound</span>
+              {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
             </Button>
 
             {/* Favorite Button */}
-            <div className="order-4">
-              <FavoriteButton 
-                recipeId={activeRecipe?.id} 
-                size="sm"
-                onToggle={(isFavorite) => {
-                  trackFeature('Toggle Favorite', { is_favorite: isFavorite })
-                }}
-              />
-            </div>
-          </div>
-          
-          {/* Recipe Title and Meta */}
-          <div className="mt-3">
-            <h2 className="text-xl font-bold text-gray-900 mb-2">
-              {activeRecipe?.title}
-            </h2>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span>⏱️ {(activeRecipe?.prepTime || 0) + (activeRecipe?.cookTime || 0)} min</span>
-              <span>👥 {activeRecipe?.servings} servings</span>
-              <span>📊 {activeRecipe?.difficulty}</span>
-              {isSessionActive && (
-                <span className="text-green-600 font-medium">
-                  • Session Active
-                </span>
-              )}
-            </div>
+            <FavoriteButton 
+              recipeId={activeRecipe?.id} 
+              size="default"
+              className="border-gray-300 text-gray-600 hover:bg-gray-50 rounded-lg"
+              onToggle={(isFavorite) => {
+                trackFeature('Toggle Favorite', { is_favorite: isFavorite })
+              }}
+            />
           </div>
         </div>
       </header>
 
-      <main className="w-full px-2 sm:px-4 py-3 sm:py-6 flex-grow">
-        <BackNavigation 
-          showHomeButton={true}
-          showBackButton={true}
-          homeLabel="Home"
-          backLabel="Back to Recipes"
-        />
-        
-        {/* Recipe Header */}
-        <div className="mb-4 sm:mb-6">
-          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2">{activeRecipe.title}</h2>
-          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
-              {activeRecipe.prepTime + activeRecipe.cookTime}m total
+      <main className="flex-grow px-4 py-6">
+        {/* Back Navigation */}
+        <div className="mb-6">
+          <div className="flex items-center gap-4">
+            <Link 
+              href="/dashboard" 
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="text-sm font-medium">Back to Recipes</span>
+            </Link>
+            <div className="w-px h-4 bg-gray-300" />
+            <Link 
+              href="/" 
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <ChefHat className="h-4 w-4" />
+              <span className="text-sm font-medium">Home</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Progress Section */}
+        <div className="mb-6">
+          <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+                  <TrendingUp className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-900">Progress</h3>
+                  <p className="text-sm text-gray-600">Step {currentStep + 1} of {activeRecipe?.instructions?.length || 0}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-lg font-semibold text-gray-900">{Math.round(progress)}%</div>
+                <div className="text-xs text-gray-600">Complete</div>
+              </div>
             </div>
-            <div className="flex items-center gap-1">
-              <Users className="h-3 w-3 sm:h-4 sm:w-4" />
-              {activeRecipe.servings} servings
-            </div>
-            <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200 text-xs">
-              {activeRecipe.difficulty}
-            </Badge>
+            <Progress value={progress} className="h-2 bg-gray-100 rounded-full" />
           </div>
         </div>
 
         {/* Scaling Calculator */}
         {showScalingCalculator && (
-          <div className="mb-4 sm:mb-6">
-            <RecipeScalingCalculator
-              recipe={baseRecipe}
-              onScaledRecipeChange={handleScaledRecipeChange} 
-            />
+          <div className="mb-6">
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+              <div className="flex items-center gap-2 mb-3">
+                <Calculator className="h-5 w-5 text-orange-500" />
+                <h3 className="font-medium text-gray-900">Recipe Scaling</h3>
+              </div>
+              <RecipeScalingCalculator
+                recipe={baseRecipe}
+                onScaledRecipeChange={handleScaledRecipeChange} 
+              />
+            </div>
           </div>
         )}
 
-        {/* Progress Bar */}
-        <div className="mb-4 sm:mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Progress</span>
-            <span className="text-sm text-muted-foreground">
-              Step {currentStep + 1} of {activeRecipe?.instructions?.length || 0}
-            </span>
-          </div>
-          <Progress value={progress} className="h-2" />
-        </div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* Main Cooking Interface */}
-          <div className="xl:col-span-2 order-1">
-            {/* Current Step */}
+          <div className="xl:col-span-2 space-y-4">
+            {/* Current Step Card */}
             {currentInstruction && (
-            <Card className="mb-4 sm:mb-6">
-              <CardHeader className="pb-3 sm:pb-6">
-                <div className="flex items-start justify-between gap-2">
-                  <CardTitle className="text-lg sm:text-xl lg:text-2xl leading-tight">
-                    Step {currentInstruction.step || (currentStep + 1)}: {currentInstruction.title || currentInstruction}
-                  </CardTitle>
-                  {completedSteps.has(currentStep) && <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-600 flex-shrink-0" />}
+            <Card className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <CardHeader className="bg-orange-500 text-white rounded-t-lg p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge className="bg-white/20 text-white border-white/30 px-2 py-1 text-xs rounded">
+                        Step {currentInstruction.step || (currentStep + 1)}
+                      </Badge>
+                      {completedSteps.has(currentStep) && (
+                        <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                          <CheckCircle className="h-4 w-4 text-orange-500" />
+                        </div>
+                      )}
+                    </div>
+                    <CardTitle className="text-lg font-semibold leading-tight">
+                      {currentInstruction.title || currentInstruction}
+                    </CardTitle>
+                  </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm sm:text-base lg:text-lg mb-4 leading-relaxed">
+              <CardContent className="p-4">
+                <p className="text-base text-gray-700 mb-4 leading-relaxed">
                   {currentInstruction.description || currentInstruction}
                 </p>
 
                 {currentInstruction.tips && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                    <p className="text-sm text-blue-800">
-                      <strong>Pro Tip:</strong> {currentInstruction.tips}
-                    </p>
+                  <div className="bg-gray-50 border-l-4 border-orange-500 rounded-r-lg p-3 mb-4">
+                    <div className="flex items-start gap-2">
+                      <Sparkles className="h-4 w-4 text-orange-500 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-gray-900 text-sm mb-1">Pro Tip</p>
+                        <p className="text-gray-700 text-sm">{currentInstruction.tips}</p>
+                      </div>
+                    </div>
                   </div>
                 )}
 
-                <div className="flex items-center gap-2">
-                  <Button
-                  onClick={() => setCompletedSteps((prev) => new Set([...prev, currentStep]))}
-                  disabled={completedSteps.has(currentStep)}
-                  variant={completedSteps.has(currentStep) ? "default" : "outline"}
-                  >
-
-                    {completedSteps.has(currentStep) ? (
-                      <>
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Completed
-                      </>
-                    ): (
-                      <>
-                      <Circle className="h-4 w-4 mr-2" />
-                      Mark as Complete
-                      </>
-                    )}
-                  </Button>
-                  {currentInstruction.duration && (
-                    <Badge variant="secondary" className="ml-auto">
-                      <Timer className="h-4 w-4 mr-1" />
-                      {Math.floor(currentInstruction.duration / 60)}m {currentInstruction.duration % 60}s
-                    </Badge>
-                  )}
-                </div>
-
-
-                {/* Timer Card */}
+                {/* Timer Section */}
                 {currentInstruction.duration && (
-                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Timer className="h-5 w-5 text-orange-600" />
-                        <span className="font-medium text-orange-800">
-                          Suggested time: {formatTime(currentInstruction.duration)}
-                        </span>
+                        <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+                          <Timer className="h-4 w-4 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900 text-sm">Suggested Timer</p>
+                          <p className="text-gray-600 text-sm">{formatTime(currentInstruction.duration)}</p>
+                        </div>
                       </div>
                       <Button
                         onClick={() => startTimer(currentInstruction.duration)}
-                        size="sm"
-                        variant="outline"
-                        className="border-orange-300 text-orange-700 hover:bg-orange-100"
+                        className="bg-orange-500 hover:bg-orange-600 text-white rounded-lg px-3 py-1 text-sm"
                       >
                         Start Timer
                       </Button>
@@ -865,95 +914,160 @@ export default function CookingModePage() {
 
                 {/* Active Timer Display */}
                 {isTimerActive && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Timer className="h-5 w-5 text-red-600 animate-pulse" />
-                        <span className="font-bold text-red-800 text-xl">{formatTime(timeLeft)}</span>
+                        <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center animate-pulse">
+                          <Timer className="h-4 w-4 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-red-800 text-lg">{formatTime(timeLeft)}</p>
+                          <p className="text-red-600 text-sm">Time remaining</p>
+                        </div>
                       </div>
                       <Button
                         onClick={stopTimer}
-                        size="sm"
                         variant="outline"
-                        className="border-red-300 text-red-700 bg-transparent"
+                        className="border-red-400 text-red-600 hover:bg-red-50 rounded-lg px-3 py-1 text-sm"
                       >
-                        Stop Timer
+                        Stop
                       </Button>
                     </div>
                   </div>
                 )}
+
+                {/* Step Actions */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={() => setCompletedSteps((prev) => new Set([...prev, currentStep]))}
+                    disabled={completedSteps.has(currentStep)}
+                    className={`flex-1 rounded-lg ${
+                      completedSteps.has(currentStep) 
+                        ? "bg-orange-500 hover:bg-orange-600 text-white" 
+                        : "bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300"
+                    }`}
+                  >
+                    {completedSteps.has(currentStep) ? (
+                      <>
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Completed
+                      </>
+                    ) : (
+                      <>
+                        <Circle className="h-4 w-4 mr-2" />
+                        Mark Complete
+                      </>
+                    )}
+                  </Button>
+                  
+                  {currentInstruction.duration && (
+                    <Badge className="bg-gray-100 text-gray-700 border border-gray-200 px-2 py-1 text-xs rounded">
+                      <Timer className="h-3 w-3 mr-1" />
+                      {Math.floor(currentInstruction.duration / 60)}m {currentInstruction.duration % 60}s
+                    </Badge>
+                  )}
+                </div>
               </CardContent>
             </Card>
             )}
 
             {/* Controls */}
-            <Card>
-              <CardContent className="pt-4 sm:pt-6">
-                <div className="flex items-center justify-center gap-2 sm:gap-4 mb-4">
-                  <Button onClick={prevStep} disabled={currentStep === 0} size="sm" className="sm:size-default lg:size-lg" variant="outline">
-                    <SkipBack className="h-4 w-4 sm:h-5 sm:w-5" />
-                    <span className="sr-only sm:not-sr-only sm:ml-1">Previous</span>
+            <Card className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <CardContent className="p-4">
+                {/* Navigation Controls */}
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <Button 
+                    onClick={prevStep} 
+                    disabled={currentStep === 0} 
+                    className="w-12 h-12 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 disabled:opacity-50"
+                  >
+                    <SkipBack className="h-5 w-5" />
                   </Button>
 
-                  <Button onClick={togglePlayPause} size="sm" className="px-4 sm:px-6 lg:px-8 sm:size-default lg:size-lg" disabled={isLoading}>
-                    {isSpeaking ? <Pause className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" /> : <Play className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />}
-                    <span className="text-xs sm:text-sm">{isLoading ? "Loading..." : isSpeaking ? "Pause" : "Play"}</span>
+                  <Button 
+                    onClick={togglePlayPause} 
+                    disabled={ttsLoading}
+                    className="w-14 h-14 rounded-full bg-orange-500 hover:bg-orange-600 text-white disabled:opacity-50"
+                  >
+                    {isSpeaking ? 
+                      <PauseCircle className="h-6 w-6" /> : 
+                      <PlayCircle className="h-6 w-6" />
+                    }
                   </Button>
 
                   <Button
                     onClick={nextStep}
                     disabled={currentStep === (activeRecipe?.instructions?.length || 1) - 1}
-                    size="sm"
-                    className="sm:size-default lg:size-lg"
-                    variant="outline"
+                    className="w-12 h-12 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 disabled:opacity-50"
                   >
-                    <SkipForward className="h-4 w-4 sm:h-5 sm:w-5" />
-                    <span className="sr-only sm:not-sr-only sm:ml-1">Next</span>
+                    <SkipForward className="h-5 w-5" />
                   </Button>
                 </div>
 
-                <div className="flex justify-center mb-4">
+                <div className="text-center mb-4">
+                  <p className="text-sm text-gray-600 mb-1">
+                    {isSpeaking ? "Playing instructions..." : "Click play to hear instructions"}
+                  </p>
+                </div>
+
+                {/* Voice Control */}
+                <div className="text-center">
                   <VoiceInputButton
                     onTranscript={handleVoiceCommand}
                     onError={(error) => console.error("Voice command error:", error)}
-                    size="default"
+                    size="lg"
                     persistent={true}
+                    className="bg-gray-700 hover:bg-gray-800 text-white rounded-lg"
                   />
-                </div>
-
-                <div className="text-center">
-                  <p className="text-xs sm:text-sm text-muted-foreground px-2">
-                    Say: "next", "previous", "repeat", "ingredients", "timers", "play", "pause", or "stop voice"
-                  </p>
+                  <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                    <p className="text-sm text-gray-600 mb-2">Voice Commands:</p>
+                    <div className="flex flex-wrap gap-1 justify-center">
+                      {["next", "previous", "repeat", "ingredients", "play", "pause"].map((cmd) => (
+                        <Badge key={cmd} className="text-xs bg-white text-gray-600 border border-gray-200 rounded">
+                          "{cmd}"
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-4 sm:space-y-6 order-2 xl:order-2">
-            <div className="xl:block">
-              <VoiceRecipeReader recipe={activeRecipe} currentStep={currentStep} />
-            </div>
+          <div className="space-y-4">
+            {/* Voice Recipe Reader */}
+            <Card className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <CardHeader className="bg-gray-800 text-white rounded-t-lg p-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Mic className="h-4 w-4" />
+                  Voice Assistant
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <VoiceRecipeReader recipe={activeRecipe} currentStep={currentStep} />
+              </CardContent>
+            </Card>
 
-           {/* Ingredients */}
-            <Card>
-              <CardHeader className="pb-3 sm:pb-6">
-                <CardTitle className="text-base sm:text-lg">
+            {/* Ingredients */}
+            <Card className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <CardHeader className="bg-gray-800 text-white rounded-t-lg p-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <span className="text-sm">🥗</span>
                   Ingredients
                   {scaledRecipe && (
-                    <Badge variant="outline" className="ml-2 bg-blue-100 text-blue-800 border-blue-200 text-xs">
+                    <Badge className="bg-orange-500 text-white ml-auto text-xs rounded">
                       Scaled
                     </Badge>
                   )}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <ul className="space-y-1.5 sm:space-y-2">
+              <CardContent className="p-4">
+                <ul className="space-y-2">
                   {activeRecipe?.ingredients?.map((ingredient, index) => (
-                    <li key={index} className="flex items-start gap-2 text-sm sm:text-base">
-                      <Circle className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-muted-foreground mt-1.5 sm:mt-2 flex-shrink-0" />
-                      <span className="break-words">
+                    <li key={index} className="flex items-start gap-2 p-2 rounded-lg bg-gray-50 border border-gray-200">
+                      <div className="w-1.5 h-1.5 bg-orange-500 rounded-full mt-2 flex-shrink-0" />
+                      <span className="text-gray-700 text-sm">
                         {typeof ingredient === 'string' 
                           ? ingredient 
                           : `${ingredient.amount || ''} ${ingredient.unit || ''} ${ingredient.name || ''}`.trim()
@@ -965,34 +1079,51 @@ export default function CookingModePage() {
               </CardContent>
             </Card>
 
-
-             {/* Recipe Overview */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Recipe Info</CardTitle>
+            {/* Recipe Overview */}
+            <Card className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <CardHeader className="bg-gray-800 text-white rounded-t-lg p-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <span className="text-sm">📊</span>
+                  Recipe Details
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">{activeRecipe?.description}</p>
+              <CardContent className="p-4">
+                <p className="text-gray-600 mb-4 text-sm leading-relaxed">{activeRecipe?.description}</p>
                 <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm">Prep Time</span>
-                    <span className="text-sm font-medium">{activeRecipe?.prepTime}m</span>
+                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-gray-600" />
+                      <span className="text-sm text-gray-700">Prep Time</span>
+                    </div>
+                    <span className="text-sm font-medium text-gray-700">{activeRecipe?.prepTime}m</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Cook Time</span>
-                    <span className="text-sm font-medium">{activeRecipe?.cookTime}m</span>
+                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Flame className="h-4 w-4 text-gray-600" />
+                      <span className="text-sm text-gray-700">Cook Time</span>
+                    </div>
+                    <span className="text-sm font-medium text-gray-700">{activeRecipe?.cookTime}m</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Total Time</span>
-                    <span className="text-sm font-medium">{(activeRecipe?.prepTime || 0) + (activeRecipe?.cookTime || 0)}m</span>
+                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Timer className="h-4 w-4 text-gray-600" />
+                      <span className="text-sm text-gray-700">Total Time</span>
+                    </div>
+                    <span className="text-sm font-medium text-gray-700">{(activeRecipe?.prepTime || 0) + (activeRecipe?.cookTime || 0)}m</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Servings</span>
-                    <span className="text-sm font-medium">{activeRecipe?.servings}</span>
+                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-gray-600" />
+                      <span className="text-sm text-gray-700">Servings</span>
+                    </div>
+                    <span className="text-sm font-medium text-gray-700">{activeRecipe?.servings}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Difficulty</span>
-                    <Badge variant="outline" className="text-xs">
+                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Target className="h-4 w-4 text-gray-600" />
+                      <span className="text-sm text-gray-700">Difficulty</span>
+                    </div>
+                    <Badge className="bg-gray-100 text-gray-700 border-gray-200 capitalize text-xs rounded">
                       {activeRecipe?.difficulty}
                     </Badge>
                   </div>
@@ -1001,14 +1132,37 @@ export default function CookingModePage() {
             </Card>
 
             {/* Nutrition Analysis */}
-            <NutritionAnalysis recipe={activeRecipe} />
+            <Card className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <CardHeader className="bg-gray-800 text-white rounded-t-lg p-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <span className="text-sm">🍎</span>
+                  Nutrition Info
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <NutritionAnalysis recipe={activeRecipe} />
+              </CardContent>
+            </Card>
           </div>
         </div>
         
-        {/* Gesture hints for mobile */}
+        {/* Mobile Gesture Hints */}
         {activeRecipe && (
-          <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-40 bg-black/70 text-white px-4 py-2 rounded-full text-xs backdrop-blur-sm md:hidden">
-            Swipe ← → for steps • Pull down to refresh
+          <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 md:hidden">
+            <div className="bg-gray-900/80 backdrop-blur-sm text-white px-4 py-2 rounded-full border border-gray-700">
+              <div className="flex items-center gap-3 text-xs">
+                <div className="flex items-center gap-1">
+                  <ArrowLeft className="h-3 w-3" />
+                  <ArrowRight className="h-3 w-3" />
+                  <span>Swipe</span>
+                </div>
+                <div className="w-px h-3 bg-white/30" />
+                <div className="flex items-center gap-1">
+                  <RotateCcw className="h-3 w-3" />
+                  <span>Pull</span>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </main>
