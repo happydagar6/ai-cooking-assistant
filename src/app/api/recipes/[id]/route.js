@@ -10,9 +10,11 @@ export async function GET(request, { params }) {
         const { id } = await params;
         
         // Get authenticated user from Clerk
-        const { userId } = await auth();
+        const authResult = await auth();
+        const { userId } = authResult;
         
         if (!userId) {
+            console.log('No authenticated user found');
             return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
         }
 

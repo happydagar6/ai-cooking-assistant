@@ -4,7 +4,11 @@ const isProtectedRoute = createRouteMatcher([
   '/dashboard(.*)',
   '/api/recipes/save(.*)',
   '/api/recipes/saved(.*)',
-  '/api/recipes/[id]/DELETE',
+  '/api/recipes/[id]',
+  // '/api/nutrition(.*)', // Disabled to debug 404 issue
+  '/api/analytics(.*)',
+  '/api/favorites(.*)',
+  '/cook(.*)',
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

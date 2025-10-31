@@ -31,11 +31,13 @@ import {
 } from "lucide-react"
 import { VoiceInputButton } from "@/components/voice-input-button"
 import { VoiceRecipeReader } from "@/components/voice-recipe-reader"
+import { NutritionAnalysis } from "@/components/nutrition-analysis"
 import { BackNavigation } from "@/components/back-navigation"
 import { RecipeScalingCalculator } from "@/components/recipe-scaling-calculator"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useOpenAITextToSpeech } from "@/hooks/use-openai-speech"
+import { useAuth } from "@/lib/auth-context"
 import { showToast } from "@/lib/toast"
 
 export default function CookingModePage() {
@@ -57,10 +59,23 @@ export default function CookingModePage() {
   const timerRef = useRef(null)
 
   const { speak, speakRecipeStep, speakTimer, stop, isSpeaking, isLoading: ttsLoading, error: ttsError, isSupported: ttsSupported } = useOpenAITextToSpeech()
+  const { isLoaded, isSignedIn } = useAuth()
 
   // Fetch recipe data on component mount
   useEffect(() => {
     const fetchRecipe = async () => {
+      // Wait for Clerk authentication to load
+      if (!isLoaded) {
+        return
+      }
+
+      // Check if user is authenticated
+      if (!isSignedIn) {
+        setError("You need to be logged in to view this recipe")
+        setIsLoading(false)
+        return
+      }
+
       if (!params?.id) {
         setError("Recipe ID not provided")
         setIsLoading(false)
@@ -77,7 +92,7 @@ export default function CookingModePage() {
           if (response.status === 404) {
             throw new Error("Recipe not found or access denied")
           } else if (response.status === 401) {
-            throw new Error("Please log in to view this recipe")
+            throw new Error("Authentication required. Please sign in.")
           }
           throw new Error("Failed to fetch recipe")
         }
@@ -99,7 +114,7 @@ export default function CookingModePage() {
     }
 
     fetchRecipe()
-  }, [params?.id])
+  }, [params?.id, isLoaded, isSignedIn])
 
   // Memoize baseRecipe early to prevent initialization issues
   const baseRecipe = useMemo(() => {
@@ -551,6 +566,65 @@ export default function CookingModePage() {
 
   return (
     <>
+      {/* Show loading while authentication is loading */}
+      {!isLoaded && (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Show error if not authenticated */}
+      {isLoaded && !isSignedIn && (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center max-w-md mx-auto p-6">
+            <h2 className="text-2xl font-bold mb-4">Authentication Required</h2>
+            <p className="text-muted-foreground mb-6">
+              Please sign in to view this recipe.
+            </p>
+            <Link 
+              href="/search" 
+              className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Search
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Show loading while recipe is loading */}
+      {isLoaded && isSignedIn && isLoading && (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading recipe...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Show error if recipe loading failed */}
+      {isLoaded && isSignedIn && error && (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center max-w-md mx-auto p-6">
+            <h2 className="text-2xl font-bold mb-4">Error</h2>
+            <p className="text-muted-foreground mb-6">{error}</p>
+            <Link 
+              href="/search" 
+              className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Search
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Main cooking interface - only show when authenticated and recipe is loaded */}
+      {isLoaded && isSignedIn && !isLoading && !error && activeRecipe && (
+        <>
       <SwipeFeedback />
       <PullToRefreshIndicator
         isPulling={isPulling}
@@ -925,6 +999,9 @@ export default function CookingModePage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Nutrition Analysis */}
+            <NutritionAnalysis recipe={activeRecipe} />
           </div>
         </div>
         
@@ -936,6 +1013,8 @@ export default function CookingModePage() {
         )}
       </main>
       </div>
+        </>
+      )}
     </>
   )
 }

@@ -10,6 +10,8 @@ export const useAuth = () => {
   
   return {
     user,
+    isLoaded, // Add isLoaded for authentication state
+    isSignedIn: !!user, // Add isSignedIn based on user presence
     loading: !isLoaded,
     getToken, // Add getToken for Supabase JWT integration
     signOut: async () => {

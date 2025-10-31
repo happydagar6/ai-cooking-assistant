@@ -169,4 +169,24 @@ export class OpenAIService {
       throw new Error("Failed to provide cooking tips");
     }
   }
+
+  static async generateStructuredNutrition(userPrompt, systemPrompt) {
+    try {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini-2024-07-18",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        max_completion_tokens: 1500,
+        temperature: 0.3, // Lower temperature for more consistent structured output
+        response_format: { type: "json_object" }, // Ensure JSON response
+      });
+      
+      return completion.choices[0].message.content;
+    } catch (error) {
+      console.error("OpenAI nutrition analysis error:", error);
+      throw new Error("Failed to analyze nutrition");
+    }
+  }
 }
