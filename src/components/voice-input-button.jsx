@@ -49,28 +49,49 @@ export function VoiceInputButton({ onTranscript, onError, disabled = false, size
 
   // Handle button click
   const handleClick = () => {
+    // Mobile-specific handling
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
     if (isListening) {
       stopListening()
     } else {
-      startListening({
-        continuous: true,
+      // Mobile-optimized voice recognition settings
+      const options = {
+        continuous: isMobile ? false : true, // Non-continuous on mobile
         interimResults: true,
         lang: "en-US",
         persistent: persistent
-      })
+      };
+      
+      // Add mobile-specific user feedback
+      if (isMobile && onError) {
+        // Brief instruction for mobile users
+        setTimeout(() => {
+          console.log('Mobile voice recognition started - speak clearly');
+        }, 100);
+      }
+      
+      startListening(options);
     }
   }
 
 
   // Don't render if voice not supported
   if (!isSupported) {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const message = isMobile ? "Voice Not Available" : "Voice Not Supported";
+    
     return (
       <Button variant="outline" disabled size={size} className="gap-2 bg-transparent">
         <AlertCircle className="h-4 w-4" />
-        Voice Not Supported
+        {message}
       </Button>
     )
   }
+
+  // Mobile-specific styling and behavior
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const mobileClasses = isMobile ? "min-h-[44px] touch-manipulation" : ""; // iOS recommended touch target size
 
   return (
     <Button
@@ -78,17 +99,21 @@ export function VoiceInputButton({ onTranscript, onError, disabled = false, size
       disabled={disabled}
       variant={variant}
       size={size}
-      className={`gap-2 ${isListening ? "bg-red-50 border-red-200 text-red-700 hover:bg-red-100" : ""}`}
+      className={`gap-2 ${mobileClasses} ${isListening ? "bg-red-50 border-red-200 text-red-700 hover:bg-red-100" : ""}`}
     >
       {isListening ? (
         <>
           <MicOff className="h-4 w-4 animate-pulse" />
-          {isStopping ? "Stopping..." : persistentMode ? "Say 'Stop' to end" : "Stop Listening"}
+          {isStopping ? "Stopping..." : 
+           persistentMode ? (isMobile ? "Say 'Stop'" : "Say 'Stop' to end") : 
+           (isMobile ? "Tap to Stop" : "Stop Listening")}
         </>
       ) : (
         <>
           <Mic className="h-4 w-4" />
-          {persistent ? "Start Voice Control" : "Use Voice"}
+          {persistent ? 
+           (isMobile ? "Start Voice" : "Start Voice Control") : 
+           (isMobile ? "Voice" : "Use Voice")}
         </>
       )}
     </Button>

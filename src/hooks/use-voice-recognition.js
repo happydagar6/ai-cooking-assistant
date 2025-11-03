@@ -22,21 +22,62 @@ export function useVoiceRecognition() {
 
   // Create recognition instance only once
   useEffect(() => {
-    // Check for browser support
-    if(!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
-      setIsSupported(false);
+    // Enhanced browser support detection for mobile devices
+    const checkSupport = () => {
+      // Check for Speech Recognition API
+      const hasSpeechRecognition = "webkitSpeechRecognition" in window || "SpeechRecognition" in window;
+      
+      if (!hasSpeechRecognition) {
+        console.log('Speech Recognition API not supported');
+        setIsSupported(false);
+        return false;
+      }
+
+      // Mobile-specific checks
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isAndroid = /Android/.test(navigator.userAgent);
+      
+      // iOS Safari has limited support
+      if (isIOS) {
+        const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+        if (isSafari) {
+          // iOS Safari 14.5+ has better support
+          const safariVersion = navigator.userAgent.match(/Version\/(\d+)/);
+          const version = safariVersion ? parseInt(safariVersion[1]) : 0;
+          if (version < 14) {
+            console.log('iOS Safari version too old for reliable speech recognition');
+            setIsSupported(false);
+            return false;
+          }
+        }
+      }
+
+      console.log(`Voice recognition supported on ${isMobile ? 'mobile' : 'desktop'} device`);
+      return true;
+    };
+
+    if (!checkSupport()) {
       return;
     }
 
-    // Create recognition instance only once
+    // Create recognition instance with mobile optimizations
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
 
+    // Mobile-optimized settings
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
-    recognition.continuous = true;
+    recognition.continuous = !isMobile; // Disable continuous on mobile for better reliability
     recognition.interimResults = true;
     recognition.lang = "en-US";
     recognition.maxAlternatives = 1;
+    
+    // Mobile-specific optimizations
+    if (isMobile) {
+      // Shorter timeout for mobile to prevent connection issues
+      recognition.grammars = new (window.SpeechGrammarList || window.webkitSpeechGrammarList)();
+    }
 
     // Event handlers
 
@@ -54,7 +95,7 @@ export function useVoiceRecognition() {
       }
     }
 
-    // Handle result event
+    // Handle result event with mobile optimizations
     recognition.onresult = (event) => {
       let interimTranscript = "";
       let finalTranscript = "";
@@ -103,9 +144,13 @@ export function useVoiceRecognition() {
           return; // Don't restart, let it stop naturally
         }
         
-        // Stop recognition immediately after getting final result to prevent duplicates
-        if(recognitionRef.current && recognitionRef.current.state !== 'inactive'){
-          recognitionRef.current.stop();
+        // Mobile optimization: Stop immediately after getting result
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (isMobile || !recognition.continuous) {
+          // On mobile or non-continuous mode, stop immediately after getting result
+          if(recognitionRef.current && recognitionRef.current.state !== 'inactive'){
+            recognitionRef.current.stop();
+          }
         }
         
         // Clear final transcript immediately to prevent re-processing
@@ -114,26 +159,26 @@ export function useVoiceRecognition() {
         }, 100);
       }
 
-      // Reset timeout on speech
+      // Reset timeout on speech - shorter timeout for mobile
       if(timeoutRef.current){
         clearTimeout(timeoutRef.current);
       }
+      const timeoutDuration = isMobile ? 5000 : 8000; // 5s for mobile, 8s for desktop
       timeoutRef.current = setTimeout(() => {
         if(recognitionRef.current && recognitionRef.current.state !== 'inactive'){
           console.log('Speech timeout reached, stopping recognition');
           recognitionRef.current.stop();
         }
-      }, 8000); // Increased to 8 seconds to reduce no-speech errors
+      }, timeoutDuration);
     }
 
     recognition.onerror = (event) => {
       console.log('Voice recognition error:', event.error);
       
-      // Handle different types of errors
+      // Handle different types of errors with mobile-specific messaging
       if (event.error === 'no-speech') {
         // No speech detected - this is normal, don't show as error
         console.log('No speech detected, this is normal behavior');
-        // Just let it restart naturally, don't set error state
         setIsListening(false);
         setIsStopping(false);
         return;
@@ -147,11 +192,24 @@ export function useVoiceRecognition() {
         return;
       }
       
-      // Only show error for actual problems
+      // Mobile-specific error handling
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
       if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-        setError('Microphone access denied. Please allow microphone access and try again.');
+        const message = isMobile 
+          ? 'Microphone access denied. Please enable microphone permissions in your browser settings and try again.'
+          : 'Microphone access denied. Please allow microphone access and try again.';
+        setError(message);
       } else if (event.error === 'network') {
-        setError('Network error occurred. Please check your internet connection.');
+        const message = isMobile
+          ? 'Network error. Please check your mobile connection and try again.'
+          : 'Network error occurred. Please check your internet connection.';
+        setError(message);
+      } else if (event.error === 'audio-capture') {
+        const message = isMobile
+          ? 'Microphone not available. Please check if another app is using the microphone.'
+          : 'Audio capture failed. Please check your microphone.';
+        setError(message);
       } else {
         setError(`Voice recognition error: ${event.error}`);
       }
@@ -220,6 +278,13 @@ export function useVoiceRecognition() {
   const startListening = useCallback((options = {}) => {
     if(!isSupported || !recognitionRef.current) {
       console.log('Cannot start - not supported or no recognition instance');
+      
+      // Mobile-specific error messages
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const errorMessage = isMobile 
+        ? "Voice recognition is not supported on this mobile browser. Please try Chrome or Safari."
+        : "Voice recognition is not supported in this browser. Please use Chrome, Safari, or Edge.";
+      setError(errorMessage);
       return;
     }
 
@@ -235,13 +300,48 @@ export function useVoiceRecognition() {
     setError(null);
     setIsStopping(false); // Ensure stopping state is reset
 
+    // Mobile-specific optimizations
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      // Force mobile-friendly settings
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = true;
+      recognitionRef.current.maxAlternatives = 1;
+      
+      // Add mobile-specific audio constraints if available
+      if (recognitionRef.current.grammars && recognitionRef.current.grammars.addFromString) {
+        try {
+          // Add common cooking commands for better recognition
+          recognitionRef.current.grammars.addFromString('#JSGF V1.0; grammar commands; public <command> = next | previous | stop | pause | resume | start timer | repeat;', 1);
+        } catch (e) {
+          console.log('Grammar not supported, continuing without');
+        }
+      }
+    }
+
     // Start recognition
     try {
-      console.log('Starting voice recognition...');
+      console.log('Starting voice recognition...' + (isMobile ? ' (mobile mode)' : ''));
       recognitionRef.current.start();
     } catch (error) {
       console.error('Failed to start voice recognition:', error);
-      setError("Failed to start voice recognition.");
+      
+      // Mobile-specific error handling
+      if (isMobile) {
+        if (error.name === 'NotAllowedError') {
+          setError("Microphone permission denied. Please enable microphone access in your browser settings and try again.");
+        } else if (error.name === 'NotSupportedError') {
+          setError("Voice recognition not supported on this mobile browser. Please try Chrome or Safari.");
+        } else if (error.name === 'ServiceNotAllowedError') {
+          setError("Voice recognition service not available. Please check your internet connection.");
+        } else {
+          setError("Voice recognition failed to start. Please check your microphone permissions and try again.");
+        }
+      } else {
+        setError("Failed to start voice recognition.");
+      }
+      
       setIsListening(false);
     }
   }, [isSupported]); 

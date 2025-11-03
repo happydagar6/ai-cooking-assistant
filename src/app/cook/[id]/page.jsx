@@ -52,11 +52,19 @@ import { VoiceRecipeReader } from "@/components/voice-recipe-reader"
 import { NutritionAnalysis } from "@/components/nutrition-analysis"
 import { BackNavigation } from "@/components/back-navigation"
 import { RecipeScalingCalculator } from "@/components/recipe-scaling-calculator"
+import { MobileVoiceDebug } from "@/components/mobile-voice-debug"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useOpenAITextToSpeech } from "@/hooks/use-openai-speech"
 import { useAuth } from "@/lib/auth-context"
 import { showToast } from "@/lib/toast"
+
+// Import mobile voice test utility for development
+if (process.env.NODE_ENV === 'development') {
+  import('@/utils/mobile-voice-test').then(({ MobileVoiceTest }) => {
+    // Test will auto-run in development mode
+  }).catch(console.error);
+}
 
 export default function CookingModePage() {
    const params = useParams()
@@ -1166,6 +1174,9 @@ export default function CookingModePage() {
           </div>
         )}
       </main>
+      
+      {/* Mobile Voice Debug Component (Development Only) */}
+      <MobileVoiceDebug />
       </div>
         </>
       )}
