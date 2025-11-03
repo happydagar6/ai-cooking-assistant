@@ -53,6 +53,7 @@ import { NutritionAnalysis } from "@/components/nutrition-analysis"
 import { BackNavigation } from "@/components/back-navigation"
 import { RecipeScalingCalculator } from "@/components/recipe-scaling-calculator"
 import { MobileVoiceDebug } from "@/components/mobile-voice-debug"
+import { SimpleVoiceTest } from "@/components/simple-voice-test"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useOpenAITextToSpeech } from "@/hooks/use-openai-speech"
@@ -63,6 +64,11 @@ import { showToast } from "@/lib/toast"
 if (process.env.NODE_ENV === 'development') {
   import('@/utils/mobile-voice-test').then(({ MobileVoiceTest }) => {
     // Test will auto-run in development mode
+  }).catch(console.error);
+  
+  // Also import troubleshooting utility
+  import('@/utils/mobile-voice-troubleshooting').then(({ MobileVoiceTroubleshooting }) => {
+    // Troubleshooting will auto-run in development mode
   }).catch(console.error);
 }
 
@@ -244,6 +250,68 @@ export default function CookingModePage() {
           navigator.vibrate(15)
       }
     }
+  }, [])
+
+  // Voice command handling
+  const handleVoiceCommand = useCallback((command) => {
+    if (!command) return
+    
+    const cmd = command.toLowerCase().trim()
+    console.log('🎤 Voice command received:', cmd)
+    
+    // Prevent duplicate commands within 2 seconds
+    const now = Date.now()
+    if (now - lastCommandTime < 2000) {
+      console.log('Ignoring duplicate command (too soon)')
+      return
+    }
+    setLastCommandTime(now)
+    
+    // Navigation commands
+    if (cmd.includes('next step') || cmd.includes('next') || cmd.includes('forward')) {
+      if (currentStep < (baseRecipe?.instructions?.length || 0) - 1) {
+        setCurrentStep(prev => prev + 1)
+        triggerHapticFeedback('medium')
+        showToast.success("Next step", "Moving to next cooking step")
+      }
+    } else if (cmd.includes('previous step') || cmd.includes('previous') || cmd.includes('back')) {
+      if (currentStep > 0) {
+        setCurrentStep(prev => prev - 1)
+        triggerHapticFeedback('medium')
+        showToast.success("Previous step", "Moving to previous cooking step")
+      }
+    } else if (cmd.includes('repeat') || cmd.includes('read again') || cmd.includes('say again')) {
+      const currentInstruction = baseRecipe?.instructions?.[currentStep]
+      if (currentInstruction && ttsSupported) {
+        speakRecipeStep(currentInstruction, currentStep + 1)
+        showToast.success("Repeating step", "Reading current step again")
+      }
+    } else if (cmd.includes('start timer') || cmd.includes('set timer')) {
+      const match = cmd.match(/(\d+)/)
+      if (match) {
+        const minutes = parseInt(match[1])
+        setTimer(minutes)
+        setTimeLeft(minutes * 60)
+        setIsTimerActive(true)
+        triggerHapticFeedback('heavy')
+        showToast.success("Timer started", `Timer set for ${minutes} minutes`)
+      }
+    } else if (cmd.includes('stop timer') || cmd.includes('cancel timer')) {
+      setIsTimerActive(false)
+      setTimer(null)
+      setTimeLeft(0)
+      triggerHapticFeedback('light')
+      showToast.success("Timer stopped", "Cooking timer cancelled")
+    } else if (cmd.includes('complete step') || cmd.includes('done') || cmd.includes('finished')) {
+      setCompletedSteps(prev => new Set([...prev, currentStep]))
+      triggerHapticFeedback('medium')
+      showToast.success("Step completed", "Great job!")
+    }
+  }, [currentStep, baseRecipe, lastCommandTime, ttsSupported, speakRecipeStep, triggerHapticFeedback])
+
+  const handleVoiceError = useCallback((error) => {
+    console.error('Voice recognition error:', error)
+    showToast.error("Voice Error", error)
   }, [])
 
   // Touch gesture controls
@@ -472,122 +540,6 @@ export default function CookingModePage() {
     }
   }
 
-  const handleVoiceCommand = (transcript) => {
-    const command = transcript.toLowerCase().trim()
-    const now = Date.now()
-    
-    console.log('Voice command received:', command) // Debug log
-    
-    // Filter out background noise and very short commands
-    if (command.length < 2 || command.match(/^[a-z]$/)) {
-      console.log('Command too short or invalid, ignoring:', command)
-      return
-    }
-    
-    // Filter out common non-command phrases
-    const commonNonCommands = ['step one', 'step two', 'step three', 'step four', 'step five', 'step six', 'step seven', 'step eight', 'step nine', 'step ten', 'step 1', 'step 2', 'step 3', 'step 4', 'step 5', 'step 6', 'step 7', 'step 8', 'step 9', 'step 0', 'um', 'uh', 'ah', 'oh', 'the', 'and', 'a', 'an', 'is', 'are', 'was', 'were']
-    if (commonNonCommands.includes(command)) {
-      console.log('Common non-command phrase ignored:', command)
-      return
-    }
-    
-    // Debounce commands - ignore if less than 2.5 seconds since last command
-    if (now - lastCommandTime < 2500) {
-      console.log('Command ignored due to debouncing:', command)
-      return
-    }
-    
-    setLastCommandTime(now)
-
-    // Track voice command usage
-    trackFeature('Voice Command', { command: transcript, parsed_action: 'unknown' })
-
-    // More flexible command matching - prioritize voice control commands
-    if (command.includes("stop voice") || command.includes("stop listening") || command.includes("stop command")) {
-      console.log('Stopping voice commands');
-      trackFeature('Voice Command', { command: transcript, parsed_action: 'stop_voice' })
-      // Voice recognition will handle stopping itself
-      showToast.success("Voice Control Stopped", "Click the microphone to start again")
-    } else if (command.includes("next") || command.includes("continue") || command.includes("forward")) {
-      console.log('Executing next step')
-      trackFeature('Voice Command', { command: transcript, parsed_action: 'next_step' })
-      nextStep()
-    } else if (command.includes("previous") || command.includes("back") || command.includes("prev")) {
-      console.log('Executing previous step')
-      trackFeature('Voice Command', { command: transcript, parsed_action: 'previous_step' })
-      prevStep()
-    } else if (command.includes("repeat") || command.includes("again") || command.includes("say again")) {
-      console.log('Repeating current step')
-      trackFeature('Voice Command', { command: transcript, parsed_action: 'repeat_step' })
-      if (!isMuted && ttsSupported) {
-        const currentInstruction = activeRecipe.instructions[currentStep]
-        speakRecipeStep(currentInstruction)
-      }
-    } else if (command.includes("ingredient") || command.includes("what do i need")) {
-      console.log('Reading ingredients')
-      if (!isMuted && ttsSupported) {
-        const ingredientsText = activeRecipe.ingredients.map(ingredient => 
-          typeof ingredient === 'string' 
-            ? ingredient 
-            : `${ingredient.amount || ''} ${ingredient.unit || ''} ${ingredient.name || ''}`.trim()
-        ).join(", ");
-        const text = `You will need: ${ingredientsText}`
-        speak(text)
-      }
-    } else if (command.includes("start timer") || command.includes("set timer") || command.includes("timer")) {
-      console.log('Starting timer')
-      const currentInstruction = activeRecipe.instructions[currentStep]
-      if (currentInstruction.duration) {
-        startTimer(currentInstruction.duration)
-      }
-    } else if (command.includes("stop timer") || command.includes("cancel timer")) {
-      console.log('Stopping timer')
-      trackFeature('Voice Command', { command: transcript, parsed_action: 'stop_timer' })
-      stopTimer()
-    } else if (command.includes("pause") || (command === "stop" || command.includes("stop audio") || command.includes("stop playing"))) {
-      console.log('Pausing audio')
-      trackFeature('Voice Command', { command: transcript, parsed_action: 'pause_audio' })
-      if (isSpeaking) {
-        stop()
-        setIsPlaying(false)
-      }
-    } else if (command.includes("play") || command.includes("start")) {
-      console.log('Playing audio - Voice command')
-      trackFeature('Voice Command', { command: transcript, parsed_action: 'play_audio' })
-      if (!isSpeaking && !isMuted && ttsSupported) {
-        const currentInstruction = activeRecipe.instructions[currentStep]
-        speakRecipeStep(currentInstruction, {
-          onEnd: () => {
-            console.log('Voice command TTS ended')
-            setIsPlaying(false)
-          },
-          onStart: () => {
-            console.log('Voice command TTS started')
-            setIsPlaying(true)
-          }
-        })
-      } else {
-        console.log('Cannot play audio - conditions not met:', {
-          isSpeaking,
-          isMuted,
-          ttsSupported
-        })
-      }
-    } else {
-      console.log('Command not recognized:', command)
-      // Only show notification for commands that seem intentional and might be valid attempts
-      const seemsIntentional = command.length > 3 && 
-                              !command.includes('um') && 
-                              !command.includes('uh') && 
-                              !command.includes('step') &&
-                              !command.match(/\b(the|and|a|an|is|are|was|were|of|to|in|for|on|at|by|with)\b/)
-      
-      if (seemsIntentional) {
-        showToast.info("Command not recognized", `Try: next, previous, repeat, ingredients, or timers`)
-      }
-    }
-  }
-
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
@@ -790,6 +742,16 @@ export default function CookingModePage() {
               onToggle={(isFavorite) => {
                 trackFeature('Toggle Favorite', { is_favorite: isFavorite })
               }}
+            />
+
+            {/* Voice Control Button */}
+            <VoiceInputButton
+              onTranscript={handleVoiceCommand}
+              onError={handleVoiceError}
+              size="default"
+              variant="outline"
+              persistent={true}
+              className="border-gray-300 text-gray-600 hover:bg-gray-50 rounded-lg"
             />
           </div>
         </div>
@@ -1169,11 +1131,34 @@ export default function CookingModePage() {
                   <RotateCcw className="h-3 w-3" />
                   <span>Pull</span>
                 </div>
+                <div className="w-px h-3 bg-white/30" />
+                <div className="flex items-center gap-1">
+                  <Mic className="h-3 w-3" />
+                  <span>Voice</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Voice Command Hints for Mobile */}
+        {activeRecipe && (
+          <div className="fixed bottom-16 left-1/2 transform -translate-x-1/2 z-40 md:hidden">
+            <div className="bg-blue-900/80 backdrop-blur-sm text-white px-3 py-1 rounded-lg border border-blue-700 max-w-xs">
+              <div className="text-xs text-center">
+                Say: "next step" • "previous" • "repeat" • "start timer 5"
               </div>
             </div>
           </div>
         )}
       </main>
+      
+      {/* Simple Voice Test Component (Development Only) */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="fixed top-4 right-4 z-50">
+          <SimpleVoiceTest />
+        </div>
+      )}
       
       {/* Mobile Voice Debug Component (Development Only) */}
       <MobileVoiceDebug />
