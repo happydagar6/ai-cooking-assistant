@@ -49,25 +49,12 @@ export function VoiceInputButton({ onTranscript, onError, disabled = false, size
 
   // Handle button click
   const handleClick = () => {
-    console.log('🔘 Voice button clicked', { 
-      isListening, 
-      isSupported, 
-      isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
-      userAgent: navigator.userAgent,
-      protocol: window.location.protocol,
-      hasWebkitSpeechRecognition: 'webkitSpeechRecognition' in window,
-      hasSpeechRecognition: 'SpeechRecognition' in window
-    });
-    
     // Mobile-specific handling
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
     if (isListening) {
-      console.log('🛑 Stopping voice recognition');
       stopListening()
     } else {
-      console.log('🎤 Starting voice recognition');
-      
       // Mobile-optimized voice recognition settings
       const options = {
         continuous: isMobile ? false : true, // Non-continuous on mobile
@@ -75,16 +62,6 @@ export function VoiceInputButton({ onTranscript, onError, disabled = false, size
         lang: "en-US",
         persistent: persistent
       };
-      
-      console.log('Voice recognition options:', options);
-      
-      // Add mobile-specific user feedback
-      if (isMobile && onError) {
-        // Brief instruction for mobile users
-        setTimeout(() => {
-          console.log('Mobile voice recognition started - speak clearly');
-        }, 100);
-      }
       
       try {
         startListening(options);

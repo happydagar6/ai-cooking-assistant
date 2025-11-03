@@ -12,8 +12,6 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import {
   ChefHat,
-  Play,
-  Pause,
   SkipForward,
   SkipBack,
   Timer,
@@ -26,51 +24,26 @@ import {
   Calculator,
   Loader2,
   ArrowLeft,
-  Square,
   Sparkles,
-  Star,
   Flame,
   Target,
-  Zap,
   Mic,
-  MicOff,
-  Heart,
   TrendingUp,
-  Activity,
   RotateCcw,
   PlayCircle,
   PauseCircle,
-  SkipBackIcon,
-  SkipForwardIcon,
   ArrowRight,
   Trophy,
-  Award,
-  Rocket,
 } from "lucide-react"
 import { VoiceInputButton } from "@/components/voice-input-button"
 import { VoiceRecipeReader } from "@/components/voice-recipe-reader"
 import { NutritionAnalysis } from "@/components/nutrition-analysis"
-import { BackNavigation } from "@/components/back-navigation"
 import { RecipeScalingCalculator } from "@/components/recipe-scaling-calculator"
-import { MobileVoiceDebug } from "@/components/mobile-voice-debug"
-import { SimpleVoiceTest } from "@/components/simple-voice-test"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useOpenAITextToSpeech } from "@/hooks/use-openai-speech"
 import { useAuth } from "@/lib/auth-context"
 import { showToast } from "@/lib/toast"
-
-// Import mobile voice test utility for development
-if (process.env.NODE_ENV === 'development') {
-  import('@/utils/mobile-voice-test').then(({ MobileVoiceTest }) => {
-    // Test will auto-run in development mode
-  }).catch(console.error);
-  
-  // Also import troubleshooting utility
-  import('@/utils/mobile-voice-troubleshooting').then(({ MobileVoiceTroubleshooting }) => {
-    // Troubleshooting will auto-run in development mode
-  }).catch(console.error);
-}
 
 export default function CookingModePage() {
    const params = useParams()
@@ -1152,16 +1125,6 @@ export default function CookingModePage() {
           </div>
         )}
       </main>
-      
-      {/* Simple Voice Test Component (Development Only) */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="fixed top-4 right-4 z-50">
-          <SimpleVoiceTest />
-        </div>
-      )}
-      
-      {/* Mobile Voice Debug Component (Development Only) */}
-      <MobileVoiceDebug />
       </div>
         </>
       )}
