@@ -35,15 +35,46 @@ import {
   ArrowRight,
   Trophy,
 } from "lucide-react"
-import { VoiceInputButton } from "@/components/voice-input-button"
-import { VoiceRecipeReader } from "@/components/voice-recipe-reader"
-import { NutritionAnalysis } from "@/components/nutrition-analysis"
-import { RecipeScalingCalculator } from "@/components/recipe-scaling-calculator"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useOpenAITextToSpeech } from "@/hooks/use-openai-speech"
 import { useAuth } from "@/lib/auth-context"
 import { showToast } from "@/lib/toast"
+import dynamic from "next/dynamic"
+import { Suspense } from "react"
+
+// Lazy load optional components that are not critical for initial render
+const LazyVoiceInputButton = dynamic(
+  () => import('@/components/voice-input-button').then(mod => ({ default: mod.VoiceInputButton })),
+  {
+    loading: () => <div className="h-10 bg-gray-200 rounded animate-pulse"></div>,
+    ssr: false
+  }
+);
+
+const LazyVoiceRecipeReader = dynamic(
+  () => import('@/components/voice-recipe-reader').then(mod => ({ default: mod.VoiceRecipeReader })),
+  {
+    loading: () => <div className="h-64 bg-gray-200 rounded animate-pulse"></div>,
+    ssr: false
+  }
+);
+
+const LazyNutritionAnalysis = dynamic(
+  () => import('@/components/nutrition-analysis').then(mod => ({ default: mod.NutritionAnalysis })),
+  {
+    loading: () => <div className="h-80 bg-gray-200 rounded animate-pulse"></div>,
+    ssr: false
+  }
+);
+
+const LazyRecipeScalingCalculator = dynamic(
+  () => import('@/components/recipe-scaling-calculator').then(mod => ({ default: mod.RecipeScalingCalculator })),
+  {
+    loading: () => <div className="h-64 bg-gray-200 rounded animate-pulse"></div>,
+    ssr: false
+  }
+);
 
 export default function CookingModePage() {
    const params = useParams()
@@ -955,13 +986,15 @@ export default function CookingModePage() {
 
                 {/* Voice Control */}
                 <div className="text-center">
-                  <VoiceInputButton
-                    onTranscript={handleVoiceCommand}
-                    onError={(error) => console.error("Voice command error:", error)}
-                    size="lg"
-                    persistent={true}
-                    className="bg-gray-700 hover:bg-gray-800 text-white rounded-lg"
-                  />
+                  <Suspense fallback={<div className="h-10 bg-gray-200 rounded animate-pulse"></div>}>
+                    <LazyVoiceInputButton
+                      onTranscript={handleVoiceCommand}
+                      onError={(error) => console.error("Voice command error:", error)}
+                      size="lg"
+                      persistent={true}
+                      className="bg-gray-700 hover:bg-gray-800 text-white rounded-lg"
+                    />
+                  </Suspense>
                   <div className="mt-3 p-3 bg-gray-50 rounded-lg">
                     <p className="text-sm text-gray-600 mb-2">Voice Commands:</p>
                     <div className="flex flex-wrap gap-1 justify-center">
@@ -988,7 +1021,9 @@ export default function CookingModePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                <VoiceRecipeReader recipe={activeRecipe} currentStep={currentStep} />
+                <Suspense fallback={<div className="h-64 bg-gray-200 rounded animate-pulse"></div>}>
+                  <LazyVoiceRecipeReader recipe={activeRecipe} currentStep={currentStep} />
+                </Suspense>
               </CardContent>
             </Card>
 
@@ -1083,7 +1118,9 @@ export default function CookingModePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                <NutritionAnalysis recipe={activeRecipe} />
+                <Suspense fallback={<div className="h-80 bg-gray-200 rounded animate-pulse"></div>}>
+                  <LazyNutritionAnalysis recipe={activeRecipe} />
+                </Suspense>
               </CardContent>
             </Card>
           </div>

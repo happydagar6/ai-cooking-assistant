@@ -8,6 +8,9 @@ import {
   useFavoriteRecipes 
 } from "@/hooks/use-optimized-queries";
 
+import dynamic from 'next/dynamic'
+import { Suspense } from 'react'
+
 // UI Components
 import {
   Card,
@@ -26,9 +29,39 @@ import {
   Users,
 } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs"
-import { Bar, BarChart, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import { Badge } from "./ui/badge"
 import { Button } from "./ui/button"
+
+// ⚡ Lazy load chart components - only loaded when analytics visible
+const LazyBarChart = dynamic(
+  () => import('@/components/lazy/LazyBarChart').then(mod => ({ 
+    default: mod.LazyBarChart 
+  })),
+  { 
+    loading: () => <div className="h-64 bg-gray-100 rounded-lg animate-pulse" />,
+    ssr: false
+  }
+)
+
+const LazyPieChart = dynamic(
+  () => import('@/components/lazy/LazyPieChart').then(mod => ({ 
+    default: mod.LazyPieChart 
+  })),
+  { 
+    loading: () => <div className="h-80 bg-gray-100 rounded-lg animate-pulse" />,
+    ssr: false
+  }
+)
+
+const LazyLineChart = dynamic(
+  () => import('@/components/lazy/LazyLineChart').then(mod => ({ 
+    default: mod.LazyLineChart 
+  })),
+  { 
+    loading: () => <div className="h-64 bg-gray-100 rounded-lg animate-pulse" />,
+    ssr: false
+  }
+)
 
 const CHART_COLORS = [
   "#8884d8", "#82ca9d", "#ffc658", "#ff7c7c", "#8dd1e1",
@@ -391,14 +424,9 @@ function CookingTimeAnalytics({ stats, isLoading }) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={chartData}>
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="time" fill="#8884d8" />
-          </BarChart>
-        </ResponsiveContainer>
+        <Suspense fallback={<div className="h-64 bg-gray-100 rounded-lg animate-pulse" />}>
+          <LazyBarChart data={chartData} xAxisKey="name" dataKey="time" />
+        </Suspense>
       </CardContent>
     </Card>
   )
@@ -442,25 +470,9 @@ function MostUsedFeaturesChart({ features, isLoading }) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={400}>
-          <PieChart>
-            <Pie
-              data={features}
-              cx="50%"
-              cy="50%"
-              labelLine={false}
-              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-              outerRadius={80}
-              fill="#8884d8"
-              dataKey="value"
-            >
-              {features.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip />
-          </PieChart>
-        </ResponsiveContainer>
+        <Suspense fallback={<div className="h-80 bg-gray-100 rounded-lg animate-pulse" />}>
+          <LazyPieChart data={features} />
+        </Suspense>
       </CardContent>
     </Card>
   )

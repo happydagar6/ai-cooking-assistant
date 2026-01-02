@@ -1,13 +1,43 @@
 "use client";
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, Suspense } from "react";
+import dynamic from "next/dynamic";
 import { useTouchGestures } from "@/hooks/use-touch-gestures";
 import { PullToRefreshIndicator } from "@/components/pull-to-refresh";
-import { AnalyticsDashboard } from "@/components/analytics-dashboard";
 import { FavoriteButton } from "@/components/favorite-button";
-import { SmartSuggestions } from "@/components/smart-suggestions";
-import { CookingAchievements } from "@/components/cooking-achievements";
 import { useAuth } from "@/lib/auth-context";
+
+// ⚡ Lazy load analytics dashboard - only load when analytics tab is visible
+const AnalyticsDashboard = dynamic(
+  () => import('@/components/analytics-dashboard').then(mod => ({ 
+    default: mod.AnalyticsDashboard 
+  })),
+  { 
+    loading: () => (
+      <div className="animate-pulse space-y-4">
+        <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+        <div className="h-64 bg-gray-200 rounded"></div>
+      </div>
+    ),
+    ssr: false
+  }
+)
+
+const SmartSuggestions = dynamic(
+  () => import('@/components/smart-suggestions'),
+  { 
+    loading: () => <div className="h-48 bg-gray-200 rounded animate-pulse"></div>,
+    ssr: false
+  }
+)
+
+const CookingAchievements = dynamic(
+  () => import('@/components/cooking-achievements'),
+  { 
+    loading: () => <div className="h-48 bg-gray-200 rounded animate-pulse"></div>,
+    ssr: false
+  }
+)
 
 // ✨ OPTIMIZED: Import React Query hooks for caching
 import { 
@@ -597,19 +627,30 @@ function DashboardContent() {
           </div>
         )}
 
-        {/* Analytics Dashboard Section */}
-        <section className="mb-8">
-          <AnalyticsDashboard />
+        {/* Analytics Dashboard Section - Lazy loaded */}
+        <section className="mb-8" id="analytics-section">
+          <Suspense fallback={
+            <div className="animate-pulse space-y-4">
+              <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+              <div className="h-64 bg-gray-200 rounded"></div>
+            </div>
+          }>
+            <AnalyticsDashboard />
+          </Suspense>
         </section>
 
-        {/* Smart Suggestions Section */}
+        {/* Smart Suggestions Section - Lazy loaded */}
         <section className="mb-8">
-          <SmartSuggestions recipes={recipes} />
+          <Suspense fallback={<div className="h-48 bg-gray-200 rounded animate-pulse"></div>}>
+            <SmartSuggestions recipes={recipes} />
+          </Suspense>
         </section>
 
-        {/* Cooking Achievements Section */}
+        {/* Cooking Achievements Section - Lazy loaded */}
         <section className="mb-12">
-          <CookingAchievements recipes={recipes} />
+          <Suspense fallback={<div className="h-48 bg-gray-200 rounded animate-pulse"></div>}>
+            <CookingAchievements recipes={recipes} />
+          </Suspense>
         </section>
 
         {recipes.length > 0 ? (
