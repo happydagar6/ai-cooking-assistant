@@ -1,5 +1,38 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
+// ======== Helper function for authenticated fetch with retry ========
+// Handles the case where Clerk session isn't ready after HMR
+async function fetchWithAuthRetry(url, options = {}, maxRetries = 2) {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, { credentials: 'include', ...options });
+      
+      // If successful, return response
+      if (response.ok) {
+        return response;
+      }
+      
+      // If 401/404 and this is the last attempt, return as-is
+      if (attempt === maxRetries) {
+        return response;
+      }
+      
+      // If 401/404 and not last attempt, wait and retry silently (Clerk might not be ready yet)
+      if (response.status === 401 || response.status === 404) {
+        // Suppress the console error by catching the failed fetch
+        await new Promise(resolve => setTimeout(resolve, 100 * (attempt + 1))); // Exponential backoff
+        continue;
+      }
+      
+      // Other errors, return response
+      return response;
+    } catch (error) {
+      if (attempt === maxRetries) throw error;
+      await new Promise(resolve => setTimeout(resolve, 100 * (attempt + 1)));
+    }
+  }
+}
+
 // ======== Query keys (Centralized cache management) ========
 
 export const QUERY_KEYS = {
@@ -28,7 +61,11 @@ export function useUserRecipes(userId) {
     return useQuery({
         queryKey: QUERY_KEYS.userRecipes(userId),
         queryFn: async () => {
-            const response = await fetch('/api/recipes/saved')
+            const response = await fetchWithAuthRetry('/api/recipes/saved')
+            // Handle 401/404 gracefully - return empty array if not authenticated
+            if (response.status === 401 || response.status === 404) {
+                return [];
+            }
             if(!response.ok) throw new Error('Failed to fetch user recipes')
             const data = await response.json();
             return data.recipes || [];
@@ -48,7 +85,7 @@ export function useAnalyticsOverview(userId) {
     return useQuery({
         queryKey: QUERY_KEYS.analyticsOverview(userId),
         queryFn: async () => {
-            const response = await fetch('/api/analytics?type=overview')
+            const response = await fetchWithAuthRetry('/api/analytics?type=overview')
             if(!response.ok) throw new Error('Failed to fetch analytics overview')
             const data = await response.json();
             return data.data;
@@ -64,7 +101,7 @@ export function useAnalyticsCookingTime(userId) {
     return useQuery({
         queryKey: QUERY_KEYS.analyticsCookingTime(userId),
         queryFn: async () => {
-            const response = await fetch('/api/analytics?type=cooking-time')
+            const response = await fetchWithAuthRetry('/api/analytics?type=cooking-time')
             if(!response.ok) throw new Error('Failed to fetch cooking time stats')
             const data = await response.json();
             return data.data;
@@ -80,7 +117,7 @@ export function useAnalyticsFeatures(userId) {
     return useQuery({
         queryKey: QUERY_KEYS.analyticsFeatures(userId),
         queryFn: async () => {
-            const response = await fetch('/api/analytics?type=features')
+            const response = await fetchWithAuthRetry('/api/analytics?type=features')
             if(!response.ok) throw new Error('Failed to fetch most used features')
             const data = await response.json();
             return data.data;
@@ -99,7 +136,7 @@ export function useAnalyticsSessions(userId, limit = 5) {
     return useQuery({
         queryKey: [...QUERY_KEYS.analyticsSessions(userId), limit],
         queryFn: async () => {
-            const response = await fetch(`/api/analytics?type=sessions&limit=${limit}`)
+            const response = await fetchWithAuthRetry(`/api/analytics?type=sessions&limit=${limit}`)
             if(!response.ok) throw new Error('Failed to fetch recent sessions')
             const data = await response.json();
             return data.data;
@@ -119,7 +156,7 @@ export function useFavoriteRecipes(userId) {
     return useQuery({
         queryKey: QUERY_KEYS.favorites(userId),
         queryFn: async () => {
-            const response = await fetch('/api/analytics?type=favorites')
+            const response = await fetchWithAuthRetry('/api/analytics?type=favorites')
             if(!response.ok) throw new Error('Failed to fetch favorite recipes')
             const data = await response.json();
             return data.data || [];
@@ -136,7 +173,7 @@ export function useFavoriteStatus(userId, recipeId) {
     return useQuery({
         queryKey: QUERY_KEYS.favoriteStatus(userId, recipeId),
         queryFn: async () => {
-            const response = await fetch(`/api/favorites/${recipeId}`);
+            const response = await fetchWithAuthRetry(`/api/favorites/${recipeId}`);
             if(!response.ok){
                 if(response.status === 404) return { is_favorite: false }; // Not found means not favorite
                 throw new Error('Failed to fetch favorite status');
@@ -159,6 +196,7 @@ export function useFavoriteMutation(userId) {
     mutationFn: async (recipeId) => {
       const response = await fetch(`/api/favorites/${recipeId}`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' }
       })
       if (!response.ok) throw new Error('Failed to toggle favorite')
@@ -212,6 +250,7 @@ export function useSaveRecipeMutation(userId) {
         mutationFn: async (recipe) => {
             const response = await fetch('/api/recipes/save', {
                 method: 'POST',
+                credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ recipe })
             });
@@ -269,6 +308,7 @@ export function useDeleteRecipeMutation(userId) {
         mutationFn: async (recipeId) => {
             const response = await fetch(`/api/recipes/${recipeId}`, {
                 method: 'DELETE',
+                credentials: 'include'
             })
             if(!response.ok) throw new Error('Failed to delete recipe')
             return recipeId;

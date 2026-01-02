@@ -9,18 +9,17 @@ export async function GET(request) {
     try {
         console.log('Saved recipes API called');
         
-        // Get user from Clerk auth
+        // Get user from Clerk auth - using await is correct
         const authResult = await auth();
-        console.log('Auth result:', authResult);
+        console.log('Auth result userId:', authResult?.userId);
         
-        const { userId } = authResult;
+        const userId = authResult?.userId;
         
         if (!userId) {
-            console.log('No userId found in auth result');
+            console.log('No userId found - returning 401');
             return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
         }
         
-        console.log('Authenticated user ID:', userId);
         console.log('Fetching saved recipes for user:', userId);
         
         // Use service role Supabase client to bypass RLS

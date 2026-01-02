@@ -1,7 +1,6 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { Suspense } from 'react';
 import VoiceControls from '@/components/voice-controls';
 import BackNavigation from '@/components/back-navigation';
 import RecipeHeader from '@/components/recipe-header';
@@ -75,9 +74,7 @@ export default function CookingPageClient({ recipe, recipeData }) {
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <span>🎤</span> Voice Input
           </h3>
-          <Suspense fallback={<div className="h-10 bg-gray-200 rounded animate-pulse"></div>}>
-            <LazyVoiceInputButton recipe={recipe} />
-          </Suspense>
+          <LazyVoiceInputButton recipe={recipe} />
         </section>
 
         {/* Recipe Scaling Calculator - Lazy loaded (optional feature) */}
@@ -85,9 +82,7 @@ export default function CookingPageClient({ recipe, recipeData }) {
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <span>📏</span> Scale Recipe
           </h3>
-          <Suspense fallback={<div className="h-64 bg-gray-200 rounded animate-pulse"></div>}>
-            <LazyRecipeScalingCalculator recipe={recipe} />
-          </Suspense>
+          <LazyRecipeScalingCalculator recipe={recipe} />
         </section>
 
         {/* Voice Recipe Reader - Lazy loaded (optional feature) */}
@@ -95,9 +90,7 @@ export default function CookingPageClient({ recipe, recipeData }) {
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <span>📖</span> Narration
           </h3>
-          <Suspense fallback={<div className="h-12 bg-gray-200 rounded animate-pulse"></div>}>
-            <LazyVoiceRecipeReader recipe={recipe} />
-          </Suspense>
+          <LazyVoiceRecipeReader recipe={recipe} />
         </section>
 
         {/* Nutrition Analysis - Lazy loaded (optional feature) */}
@@ -105,9 +98,7 @@ export default function CookingPageClient({ recipe, recipeData }) {
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <span>📊</span> Nutrition
           </h3>
-          <Suspense fallback={<div className="h-80 bg-gray-200 rounded animate-pulse"></div>}>
-            <LazyNutritionAnalysis recipe={recipe} />
-          </Suspense>
+          <LazyNutritionAnalysis recipe={recipe} />
         </section>
       </main>
     </div>

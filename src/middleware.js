@@ -3,16 +3,19 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 const isProtectedRoute = createRouteMatcher([
   '/dashboard(.*)',
   '/api/recipes/save(.*)',
-  '/api/recipes/saved(.*)',
+  // '/api/recipes/saved', - Handle auth in the endpoint instead
   '/api/recipes/[id]',
-  // '/api/nutrition(.*)', // Disabled to debug 404 issue
   '/api/analytics(.*)',
   '/api/favorites(.*)',
   '/cook(.*)',
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
-  if (isProtectedRoute(req)) await auth.protect();
+  // Protect routes that require authentication
+  if (isProtectedRoute(req)) {
+    // This will redirect to sign-in if not authenticated
+    await auth.protect();
+  }
 });
 
 export const config = {

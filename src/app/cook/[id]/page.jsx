@@ -39,9 +39,9 @@ import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useOpenAITextToSpeech } from "@/hooks/use-openai-speech"
 import { useAuth } from "@/lib/auth-context"
+import { useAuth as useClerkAuth } from "@clerk/nextjs"
 import { showToast } from "@/lib/toast"
 import dynamic from "next/dynamic"
-import { Suspense } from "react"
 
 // Lazy load optional components that are not critical for initial render
 const LazyVoiceInputButton = dynamic(
@@ -77,7 +77,8 @@ const LazyRecipeScalingCalculator = dynamic(
 );
 
 export default function CookingModePage() {
-   const params = useParams()
+  const params = useParams()
+  const { getToken } = useClerkAuth()
   const [currentStep, setCurrentStep] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
   const [timer, setTimer] = useState(null)
@@ -122,13 +123,24 @@ export default function CookingModePage() {
         setIsLoading(true)
         setError(null)
         
-        const response = await fetch(`/api/recipes/${params.id}`)
+        // Get Clerk session token to include in request
+        const token = await getToken()
+        
+        const response = await fetch(`/api/recipes/${params.id}`, {
+          credentials: 'include', // Include cookies for Clerk session
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        })
         
         if (!response.ok) {
           if (response.status === 404) {
             throw new Error("Recipe not found or access denied")
           } else if (response.status === 401) {
-            throw new Error("Authentication required. Please sign in.")
+            // Session might have expired due to dev server restart
+            // Return empty state instead of erroring - user can refresh the page
+            console.warn("Session expired - please refresh the page to re-authenticate")
+            setRecipe(null)
+            setIsLoading(false)
+            return
           }
           throw new Error("Failed to fetch recipe")
         }
@@ -310,8 +322,34 @@ export default function CookingModePage() {
       setCompletedSteps(prev => new Set([...prev, currentStep]))
       triggerHapticFeedback('medium')
       showToast.success("Step completed", "Great job!")
+    } else if (cmd.includes('play') || cmd.includes('read') || cmd.includes('speak')) {
+      // Handle play/read command
+      if (!isMuted && ttsSupported) {
+        setIsPlaying(true)
+        triggerHapticFeedback('light')
+        const currentInstruction = baseRecipe?.instructions?.[currentStep]
+        if (currentInstruction) {
+          speakRecipeStep(currentInstruction, {
+            onEnd: () => setIsPlaying(false),
+            onStart: () => setIsPlaying(true)
+          })
+          showToast.success("Playing step", "Reading current instruction")
+          trackFeature('Text-to-Speech', { action: 'start_voice_command', step_number: currentStep + 1 })
+        }
+      } else {
+        showToast.error("Audio Disabled", isMuted ? "Unmute to hear instructions" : "Text-to-speech not supported")
+      }
+    } else if (cmd.includes('pause') || cmd.includes('stop') || cmd.includes('quiet')) {
+      // Handle pause/stop command
+      if (isSpeaking) {
+        stop()
+        setIsPlaying(false)
+        triggerHapticFeedback('light')
+        showToast.success("Paused", "Audio paused")
+        trackFeature('Text-to-Speech', { action: 'stop_voice_command' })
+      }
     }
-  }, [currentStep, baseRecipe, lastCommandTime, ttsSupported, speakRecipeStep, triggerHapticFeedback])
+  }, [currentStep, baseRecipe, lastCommandTime, ttsSupported, speakRecipeStep, triggerHapticFeedback, isMuted, isSpeaking, stop, trackFeature])
 
   const handleVoiceError = useCallback((error) => {
     console.error('Voice recognition error:', error)
@@ -387,22 +425,39 @@ export default function CookingModePage() {
   
   // Error state
   if (error || !recipe) {
+    const isSessionExpired = !recipe && !error; // 401 scenario - recipe is null but no error shown
+    
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-orange-50 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-6">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-orange-50 flex items-center justify-center p-4">
+        <div className="text-center max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <ChefHat className="h-8 w-8 text-red-600" />
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-3">Recipe Not Found</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-3">
+            {isSessionExpired ? "Session Expired" : "Recipe Not Found"}
+          </h2>
           <p className="text-gray-600 mb-6 text-sm leading-relaxed">
-            {error || "Unable to load recipe data"}
+            {isSessionExpired 
+              ? "Your session has expired due to a server restart. Please refresh the page to re-authenticate."
+              : error || "Unable to load recipe data"}
           </p>
-          <Link href="/dashboard">
-            <Button className="bg-orange-500 hover:bg-orange-600 text-white rounded-lg px-4 py-2">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Recipes
-            </Button>
-          </Link>
+          <div className="flex flex-col gap-3">
+            {isSessionExpired ? (
+              <Button 
+                onClick={() => window.location.reload()} 
+                className="bg-orange-500 hover:bg-orange-600 text-white rounded-lg px-4 py-2 w-full"
+              >
+                Refresh Page
+              </Button>
+            ) : (
+              <Link href="/dashboard" className="w-full">
+                <Button className="bg-orange-500 hover:bg-orange-600 text-white rounded-lg px-4 py-2 w-full">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Recipes
+                </Button>
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     )
@@ -749,7 +804,7 @@ export default function CookingModePage() {
             />
 
             {/* Voice Control Button */}
-            <VoiceInputButton
+            <LazyVoiceInputButton
               onTranscript={handleVoiceCommand}
               onError={handleVoiceError}
               size="default"
@@ -813,7 +868,7 @@ export default function CookingModePage() {
                 <Calculator className="h-5 w-5 text-orange-500" />
                 <h3 className="font-medium text-gray-900">Recipe Scaling</h3>
               </div>
-              <RecipeScalingCalculator
+              <LazyRecipeScalingCalculator
                 recipe={baseRecipe}
                 onScaledRecipeChange={handleScaledRecipeChange} 
               />
@@ -986,15 +1041,13 @@ export default function CookingModePage() {
 
                 {/* Voice Control */}
                 <div className="text-center">
-                  <Suspense fallback={<div className="h-10 bg-gray-200 rounded animate-pulse"></div>}>
-                    <LazyVoiceInputButton
-                      onTranscript={handleVoiceCommand}
-                      onError={(error) => console.error("Voice command error:", error)}
-                      size="lg"
-                      persistent={true}
-                      className="bg-gray-700 hover:bg-gray-800 text-white rounded-lg"
-                    />
-                  </Suspense>
+                  <LazyVoiceInputButton
+                    onTranscript={handleVoiceCommand}
+                    onError={(error) => console.error("Voice command error:", error)}
+                    size="lg"
+                    persistent={true}
+                    className="bg-gray-700 hover:bg-gray-800 text-white rounded-lg"
+                  />
                   <div className="mt-3 p-3 bg-gray-50 rounded-lg">
                     <p className="text-sm text-gray-600 mb-2">Voice Commands:</p>
                     <div className="flex flex-wrap gap-1 justify-center">
@@ -1021,9 +1074,7 @@ export default function CookingModePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                <Suspense fallback={<div className="h-64 bg-gray-200 rounded animate-pulse"></div>}>
-                  <LazyVoiceRecipeReader recipe={activeRecipe} currentStep={currentStep} />
-                </Suspense>
+                <LazyVoiceRecipeReader recipe={activeRecipe} currentStep={currentStep} />
               </CardContent>
             </Card>
 
@@ -1118,9 +1169,7 @@ export default function CookingModePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                <Suspense fallback={<div className="h-80 bg-gray-200 rounded animate-pulse"></div>}>
-                  <LazyNutritionAnalysis recipe={activeRecipe} />
-                </Suspense>
+                <LazyNutritionAnalysis recipe={activeRecipe} />
               </CardContent>
             </Card>
           </div>

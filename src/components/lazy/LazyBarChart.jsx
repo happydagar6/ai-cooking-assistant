@@ -1,7 +1,6 @@
 "use client"
 
 import dynamic from 'next/dynamic'
-import { Suspense } from 'react'
 
 // Lazy load Recharts components - only loaded when needed
 const BarChart = dynamic(
@@ -39,15 +38,13 @@ const ResponsiveContainer = dynamic(
 
 export function LazyBarChart({ data, dataKey = 'value', xAxisKey = 'name' }) {
   return (
-    <Suspense fallback={<div className="h-64 bg-gray-100 rounded-lg animate-pulse" />}>
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data}>
-          <XAxis dataKey={xAxisKey} />
-          <YAxis />
-          <Tooltip />
-          <Bar dataKey={dataKey} fill="#f97316" />
-        </BarChart>
-      </ResponsiveContainer>
-    </Suspense>
+    <ResponsiveContainer width="100%" height={300}>
+      <BarChart data={data}>
+        <XAxis dataKey={xAxisKey} />
+        <YAxis />
+        <Tooltip />
+        <Bar dataKey={dataKey} fill="#f97316" />
+      </BarChart>
+    </ResponsiveContainer>
   )
 }

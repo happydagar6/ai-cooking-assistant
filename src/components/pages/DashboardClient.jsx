@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, lazy, useState } from 'react'
+import { lazy, useState } from 'react'
 import dynamic from 'next/dynamic'
 import React from 'react'
 import { useTouchGestures } from "@/hooks/use-touch-gestures"
@@ -103,9 +103,7 @@ export function DashboardClient() {
 
       {/* Analytics - Lazy load only when needed */}
       <div id="analytics-section" className="scroll-mt-8">
-        <Suspense fallback={<DashboardSkeleton />}>
-          <AnalyticsDashboard />
-        </Suspense>
+        <AnalyticsDashboard />
       </div>
     </div>
   )

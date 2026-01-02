@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useCallback, Suspense } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useTouchGestures } from "@/hooks/use-touch-gestures";
 import { PullToRefreshIndicator } from "@/components/pull-to-refresh";
@@ -23,16 +23,10 @@ const AnalyticsDashboard = dynamic(
   }
 )
 
-const SmartSuggestions = dynamic(
-  () => import('@/components/smart-suggestions'),
-  { 
-    loading: () => <div className="h-48 bg-gray-200 rounded animate-pulse"></div>,
-    ssr: false
-  }
-)
-
 const CookingAchievements = dynamic(
-  () => import('@/components/cooking-achievements'),
+  () => import('@/components/cooking-achievements').then(mod => ({ 
+    default: mod.CookingAchievements 
+  })),
   { 
     loading: () => <div className="h-48 bg-gray-200 rounded animate-pulse"></div>,
     ssr: false
@@ -426,22 +420,22 @@ function DashboardContent() {
 
         {/* Search and Filter Section */}
         <div className="mb-8">
-          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+          <div className="space-y-3 px-4">
             {/* Search Input */}
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search recipes, ingredients..."
+                placeholder="Search recipes..."
+                className="pl-10 text-sm"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-10"
               />
               {searchTerm && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
                   onClick={() => setSearchTerm("")}
+                  className="absolute right-1 top-1.5 h-7 w-7 p-0"
                 >
                   <X className="h-3 w-3" />
                 </Button>
@@ -453,9 +447,10 @@ function DashboardContent() {
               {/* Difficulty Filter */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="gap-2">
-                    <Filter className="h-4 w-4" />
-                    Difficulty
+                  <Button variant="outline" size="sm" className="gap-2 text-xs sm:text-sm">
+                    <Filter className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Difficulty</span>
+                    <span className="sm:hidden">Diff</span>
                     {difficultyFilter !== "all" && (
                       <Badge variant="secondary" className="ml-1 h-4 text-xs">
                         {difficultyFilter}
@@ -486,9 +481,10 @@ function DashboardContent() {
               {/* Cuisine Filter */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="gap-2">
-                    <Utensils className="h-4 w-4" />
-                    Cuisine
+                  <Button variant="outline" size="sm" className="gap-2 text-xs sm:text-sm">
+                    <Utensils className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Cuisine</span>
+                    <span className="sm:hidden">Cuisine</span>
                     {cuisineFilter !== "all" && (
                       <Badge variant="secondary" className="ml-1 h-4 text-xs">
                         {cuisineFilter}
@@ -516,9 +512,10 @@ function DashboardContent() {
               {/* Time Filter */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="gap-2">
-                    <Clock className="h-4 w-4" />
-                    Time
+                  <Button variant="outline" size="sm" className="gap-2 text-xs sm:text-sm">
+                    <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Time</span>
+                    <span className="sm:hidden">Time</span>
                     {timeFilter !== "all" && (
                       <Badge variant="secondary" className="ml-1 h-4 text-xs">
                         {timeFilter === "quick"
@@ -562,20 +559,20 @@ function DashboardContent() {
                     setCuisineFilter("all");
                     setTimeFilter("all");
                   }}
-                  className="text-muted-foreground hover:text-foreground"
+                  className="text-muted-foreground hover:text-foreground text-xs sm:text-sm"
                 >
-                  Clear Filters
+                  Clear
                 </Button>
               )}
             </div>
           </div>
         </div>
 
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-5 bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+        <div className="text-center mb-6 sm:mb-8 px-4">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-5 bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
             My Recipe Collection
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base lg:text-lg text-muted-foreground max-w-2xl mx-auto">
             Your saved recipes are ready when you are. Start cooking or discover
             new favorites!
           </p>
@@ -585,37 +582,41 @@ function DashboardContent() {
         {!searchTerm.trim() && (
           <div className="mb-6">
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-              <TabsList className="grid w-full grid-cols-4 mb-4">
-                <TabsTrigger value="recent" className="flex items-center gap-2">
-                  <History className="h-4 w-4" />
-                  <span>Recent</span>
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-4 gap-1">
+                <TabsTrigger value="recent" className="flex items-center gap-1 text-xs sm:text-sm px-2">
+                  <History className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Recent</span>
+                  <span className="sm:hidden">Recent</span>
                   {categoryStats.recent > 0 && (
                     <Badge variant="secondary" className="ml-1 h-5 text-xs">
                       {categoryStats.recent}
                     </Badge>
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="favorites" className="flex items-center gap-2">
-                  <Heart className="h-4 w-4" />
-                  <span>Favorites</span>
+                <TabsTrigger value="favorites" className="flex items-center gap-1 text-xs sm:text-sm px-2">
+                  <Heart className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Favorites</span>
+                  <span className="sm:hidden">Fav</span>
                   {categoryStats.favorites > 0 && (
                     <Badge variant="secondary" className="ml-1 h-5 text-xs">
                       {categoryStats.favorites}
                     </Badge>
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="quick" className="flex items-center gap-2">
-                  <Zap className="h-4 w-4" />
-                  <span>Quick</span>
+                <TabsTrigger value="quick" className="flex items-center gap-1 text-xs sm:text-sm px-2">
+                  <Zap className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Quick</span>
+                  <span className="sm:hidden">Quick</span>
                   {categoryStats.quick > 0 && (
                     <Badge variant="secondary" className="ml-1 h-5 text-xs">
                       {categoryStats.quick}
                     </Badge>
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="all" className="flex items-center gap-2">
-                  <Grid className="h-4 w-4" />
-                  <span>All</span>
+                <TabsTrigger value="all" className="flex items-center gap-1 text-xs sm:text-sm px-2">
+                  <Grid className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">All</span>
+                  <span className="sm:hidden">All</span>
                   {categoryStats.all > 0 && (
                     <Badge variant="secondary" className="ml-1 h-5 text-xs">
                       {categoryStats.all}
@@ -629,34 +630,18 @@ function DashboardContent() {
 
         {/* Analytics Dashboard Section - Lazy loaded */}
         <section className="mb-8" id="analytics-section">
-          <Suspense fallback={
-            <div className="animate-pulse space-y-4">
-              <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-              <div className="h-64 bg-gray-200 rounded"></div>
-            </div>
-          }>
-            <AnalyticsDashboard />
-          </Suspense>
-        </section>
-
-        {/* Smart Suggestions Section - Lazy loaded */}
-        <section className="mb-8">
-          <Suspense fallback={<div className="h-48 bg-gray-200 rounded animate-pulse"></div>}>
-            <SmartSuggestions recipes={recipes} />
-          </Suspense>
+          <AnalyticsDashboard />
         </section>
 
         {/* Cooking Achievements Section - Lazy loaded */}
         <section className="mb-12">
-          <Suspense fallback={<div className="h-48 bg-gray-200 rounded animate-pulse"></div>}>
-            <CookingAchievements recipes={recipes} />
-          </Suspense>
+          <CookingAchievements recipes={recipes} />
         </section>
 
         {recipes.length > 0 ? (
           <div>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-semibold">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3 sm:gap-0 px-4">
+              <h3 className="text-lg sm:text-2xl font-semibold">
                 {searchTerm.trim() ? (
                   `Search Results (${currentRecipes.length} found)`
                 ) : (
@@ -666,7 +651,7 @@ function DashboardContent() {
                     {activeTab === 'quick' && 'Quick Recipes (≤30 min)'}
                     {activeTab === 'all' && 'All Saved Recipes'}
                     {currentRecipes.length !== categoryStats[activeTab] && (
-                      <span className="text-muted-foreground text-lg ml-2">
+                      <span className="text-muted-foreground text-sm sm:text-lg ml-2 block sm:inline">
                         (Showing {currentRecipes.length} of {categoryStats[activeTab]})
                       </span>
                     )}
@@ -687,28 +672,28 @@ function DashboardContent() {
 
             {currentRecipes.length > 0 ? (
               <>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {currentRecipes.map((recipe) => (
                   <Card
                     key={recipe.id}
-                    className="hover:shadow-lg transition-shadow"
+                    className="hover:shadow-lg transition-shadow flex flex-col h-full"
                   >
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <CardTitle className="text-lg mb-2">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <CardTitle className="text-base sm:text-lg mb-2 line-clamp-2">
                             {recipe.title}
                           </CardTitle>
-                          <CardDescription className="text-sm">
+                          <CardDescription className="text-xs sm:text-sm line-clamp-2">
                             {recipe.description}
                           </CardDescription>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 flex-shrink-0">
                           <Badge
                             className={getDifficultyColor(recipe.difficulty)}
                             variant="outline"
                           >
-                            {recipe.difficulty}
+                            <span className="text-xs sm:text-sm">{recipe.difficulty}</span>
                           </Badge>
                           
                           {/* Add Favorite Button */}
@@ -720,26 +705,26 @@ function DashboardContent() {
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                    <CardContent className="flex-grow pb-3">
+                      <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground mb-4 flex-wrap">
                         <div className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                          {(recipe.prep_time || 0) + (recipe.cook_time || 0)}m
+                          <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
+                          <span>{(recipe.prep_time || 0) + (recipe.cook_time || 0)}m</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Users className="h-4 w-4" />
-                          {recipe.servings || "N/A"}
+                          <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+                          <span>{recipe.servings || "N/A"}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Utensils className="h-4 w-4" />
-                          {recipe.cuisine_type || "Various"}
+                          <Utensils className="h-3 w-3 sm:h-4 sm:w-4" />
+                          <span className="truncate">{recipe.cuisine_type || "Various"}</span>
                         </div>
                       </div>
 
                       <Separator className="mb-4" />
 
                       <div className="mb-4">
-                        <p className="text-sm font-medium mb-2">
+                        <p className="text-xs sm:text-sm font-medium mb-2">
                           Key Ingredients:
                         </p>
                         <div className="flex flex-wrap gap-1">
@@ -763,12 +748,14 @@ function DashboardContent() {
                           )}
                         </div>
                       </div>
-
+                    </CardContent>
+                    <div className="border-t pt-3 px-6 pb-6">
                       <div className="flex gap-2">
                         <Link href={`/cook/${recipe.id}`} className="flex-1">
-                          <Button className="w-full gap-2">
-                            <ChefHat className="h-4 w-4" />
-                            Start Cooking
+                          <Button className="w-full gap-2 text-sm sm:text-base" size="sm">
+                            <ChefHat className="h-3 w-3 sm:h-4 sm:w-4" />
+                            <span className="hidden sm:inline">Start Cooking</span>
+                            <span className="sm:hidden">Cook</span>
                           </Button>
                         </Link>
 
@@ -780,13 +767,13 @@ function DashboardContent() {
                           className="gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
                         >
                           {deletingRecipes.has(recipe.id) ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
                           ) : (
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                           )}
                         </Button>
                       </div>
-                    </CardContent>
+                    </div>
                   </Card>
                 ))}
               </div>
