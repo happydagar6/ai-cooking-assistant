@@ -230,24 +230,24 @@ function SearchPageContent() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-orange-50">
       <Navigation />
       
-      <main className="container mx-auto px-4 py-8 flex-grow">
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-grow">
         {/* Hero Search Section */}
-        <div className="relative mb-12">
+        <div className="relative mb-8 sm:mb-12">
           {/* Background decoration */}
-          <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 to-amber-500/5 rounded-3xl" />
-          <div className="absolute top-4 right-4 opacity-20">
-            <Sparkles className="h-32 w-32 text-orange-500" />
+          <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 to-amber-500/5 rounded-2xl sm:rounded-3xl" />
+          <div className="absolute top-2 sm:top-4 right-2 sm:right-4 opacity-10 sm:opacity-20">
+            <Sparkles className="h-20 sm:h-32 w-20 sm:w-32 text-orange-500" />
           </div>
           
-          <div className="relative max-w-4xl mx-auto text-center py-16 px-8">
+          <div className="relative max-w-4xl mx-auto text-center py-8 sm:py-12 lg:py-16 px-4 sm:px-6 lg:px-8">
             {/* Hero Badge */}
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-100 to-amber-100 text-orange-700 px-6 py-2 rounded-full text-sm font-medium mb-6">
-              <Sparkles className="h-4 w-4" />
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-100 to-amber-100 text-orange-700 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium mb-4 sm:mb-6">
+              <Sparkles className="h-3 sm:h-4 w-3 sm:w-4" />
               AI-Powered Recipe Discovery
             </div>
             
             {/* Hero Title */}
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+            <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight">
               What Sounds{" "}
               <span className="bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
                 Delicious
@@ -256,38 +256,39 @@ function SearchPageContent() {
             </h1>
             
             {/* Hero Description */}
-            <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg lg:text-xl text-gray-600 mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed">
               Tell me your ingredients, dietary preferences, or what you&apos;re craving. I&apos;ll create the perfect recipe just for you.
             </p>
 
             {/* Enhanced Search Input */}
-            <div className="max-w-2xl mx-auto mb-8">
+            <div className="max-w-2xl mx-auto mb-6 sm:mb-8">
               <VoiceSearchInput
                 onSearch={handleSearch}
                 placeholder="Try: 'I have chicken and rice' or 'quick healthy dinner'"
                 isLoading={isLoading}
-                className="h-16 text-lg shadow-2xl border-2 border-orange-200/50 bg-white/80 backdrop-blur-sm rounded-2xl"
+                className="h-14 sm:h-16 text-base sm:text-lg shadow-2xl border-2 border-orange-200/50 bg-white/80 backdrop-blur-sm rounded-2xl"
               />
             </div>
 
             {/* Quick Action Chips */}
-            <div className="flex flex-wrap gap-3 justify-center mb-8">
+            <div className="flex flex-wrap gap-2 sm:gap-3 justify-center mb-6 sm:mb-8">
               {quickSuggestions.map((suggestion, index) => (
                 <Button
                   key={index}
                   variant="outline"
                   onClick={() => handleSearch(suggestion.text)}
-                  className="group bg-white/70 backdrop-blur-sm hover:bg-white hover:shadow-lg transition-all duration-300 rounded-xl border-2 border-gray-200/50 hover:border-orange-300"
+                  className="group bg-white/70 backdrop-blur-sm hover:bg-white hover:shadow-lg transition-all duration-300 rounded-lg sm:rounded-xl border-2 border-gray-200/50 hover:border-orange-300 text-xs sm:text-sm"
                 >
-                  <span className="mr-2 text-lg">{suggestion.icon}</span>
-                  <span className="text-gray-700 font-medium">{suggestion.text}</span>
-                  <ArrowRight className="ml-2 h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                  <span className="mr-1.5 sm:mr-2 text-base sm:text-lg">{suggestion.icon}</span>
+                  <span className="text-gray-700 font-medium hidden sm:inline">{suggestion.text}</span>
+                  <span className="text-gray-700 font-medium inline sm:hidden">{suggestion.text.split(' ').slice(0, 2).join(' ')}</span>
+                  <ArrowRight className="ml-1.5 sm:ml-2 h-3 sm:h-4 w-3 sm:w-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                 </Button>
               ))}
             </div>
 
             {/* Voice Hint */}
-            <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+            <div className="flex items-center justify-center gap-2 text-xs sm:text-sm text-gray-500">
               <Mic className="h-4 w-4" />
               <span>Click the mic button or type your request</span>
             </div>
@@ -296,54 +297,54 @@ function SearchPageContent() {
 
         {/* Loading State */}
         {isLoading && (
-          <div className="text-center py-20">
+          <div className="text-center py-12 sm:py-20">
             <div className="relative inline-block">
-              <div className="w-16 h-16 bg-gradient-to-r from-orange-400 to-amber-400 rounded-full flex items-center justify-center mb-6">
-                <ChefHat className="h-8 w-8 text-white animate-bounce" />
+              <div className="w-12 sm:w-16 h-12 sm:h-16 bg-gradient-to-r from-orange-400 to-amber-400 rounded-full flex items-center justify-center mb-4 sm:mb-6">
+                <ChefHat className="h-6 sm:h-8 w-6 sm:w-8 text-white animate-bounce" />
               </div>
-              <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full animate-ping" />
+              <div className="absolute -top-2 -right-2 w-5 sm:w-6 h-5 sm:h-6 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full animate-ping" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Crafting Perfect Recipes</h3>
-            <p className="text-gray-600">Our AI chef is selecting the best recipes for you...</p>
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">Crafting Perfect Recipes</h3>
+            <p className="text-sm sm:text-base text-gray-600">Our AI chef is selecting the best recipes for you...</p>
           </div>
         )}
 
         {/* Results Section */}
         {recipes.length > 0 && !isLoading && (
-          <div className="mb-12">
+          <div className="mb-8 sm:mb-12">
             {/* Results Header */}
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl flex items-center justify-center">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8">
+              <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                <div className="w-9 sm:w-10 h-9 sm:h-10 bg-gradient-to-r from-orange-500 to-amber-500 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
                   <Star className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Perfect Matches</h2>
-                  <p className="text-gray-600">AI-curated recipes just for you</p>
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Perfect Matches</h2>
+                  <p className="text-xs sm:text-sm text-gray-600">AI-curated recipes just for you</p>
                 </div>
               </div>
               <Badge 
                 variant="secondary" 
-                className="bg-gradient-to-r from-orange-100 to-amber-100 text-orange-700 px-4 py-2 text-sm font-medium"
+                className="bg-gradient-to-r from-orange-100 to-amber-100 text-orange-700 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium whitespace-nowrap"
               >
-                {recipes.length} recipes found
+                {recipes.length} recipes
               </Badge>
             </div>
 
             {/* Recipe Grid */}
-            <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
               {recipes.map((recipe, index) => (
                 <Card 
                   key={recipe.id || index} 
-                  className="group hover:shadow-2xl transition-all duration-500 border-0 shadow-lg bg-white/70 backdrop-blur-sm hover:bg-white hover:scale-105"
+                  className="group hover:shadow-2xl transition-all duration-500 border-0 shadow-lg bg-white/70 backdrop-blur-sm hover:bg-white hover:scale-100 sm:hover:scale-105 flex flex-col h-full"
                 >
-                  <CardHeader className="pb-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <CardTitle className="text-xl font-bold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors duration-300">
+                  <CardHeader className="pb-3 sm:pb-4">
+                    <div className="flex items-start justify-between gap-2 mb-2 sm:mb-3">
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-lg sm:text-xl font-bold text-gray-900 mb-1 sm:mb-2 group-hover:text-orange-600 transition-colors duration-300 line-clamp-2">
                           {recipe.title}
                         </CardTitle>
-                        <CardDescription className="text-gray-600 leading-relaxed">
+                        <CardDescription className="text-xs sm:text-sm text-gray-600 leading-relaxed line-clamp-2">
                           {recipe.description}
                         </CardDescription>
                       </div>
@@ -353,48 +354,48 @@ function SearchPageContent() {
                         <FavoriteButton 
                           recipeId={recipe.id} 
                           size="sm"
-                          className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                          className="ml-2 opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 flex-shrink-0"
                         />
                       )}
                     </div>
                     
                     {/* Difficulty Badge */}
-                    <div className="flex items-center gap-2">
-                      <Badge className={`${getDifficultyColor(recipe.difficulty)} px-3 py-1 font-medium capitalize`}>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge className={`${getDifficultyColor(recipe.difficulty)} px-2 sm:px-3 py-0.5 sm:py-1 text-xs sm:text-sm font-medium capitalize`}>
                         {recipe.difficulty}
                       </Badge>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-0.5">
                         {[...Array(5)].map((_, i) => (
                           <Star 
                             key={i} 
-                            className={`h-3 w-3 ${i < 4 ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
+                            className={`h-2.5 sm:h-3 w-2.5 sm:w-3 ${i < 4 ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
                           />
                         ))}
                       </div>
                     </div>
                   </CardHeader>
                   
-                  <CardContent className="pt-0">
+                  <CardContent className="pt-0 flex-1 flex flex-col">
                     {/* Recipe Stats */}
-                    <div className="flex items-center justify-between text-sm text-gray-600 mb-6 bg-gray-50/50 rounded-xl p-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-gradient-to-r from-blue-100 to-blue-200 rounded-lg flex items-center justify-center">
-                          <Clock className="h-4 w-4 text-blue-600" />
+                    <div className="flex items-center justify-between text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6 bg-gray-50/50 rounded-lg sm:rounded-xl p-3 sm:p-4">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-7 sm:w-8 h-7 sm:h-8 bg-gradient-to-r from-blue-100 to-blue-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Clock className="h-3.5 sm:h-4 w-3.5 sm:w-4 text-blue-600" />
                         </div>
                         <div>
-                          <div className="font-medium text-gray-900">
+                          <div className="font-medium text-gray-900 text-xs sm:text-sm">
                             {(recipe.prep_time || recipe.prepTime || 0) + (recipe.cook_time || recipe.cookTime || 0)}m
                           </div>
                           <div className="text-xs text-gray-500">Total time</div>
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-gradient-to-r from-green-100 to-green-200 rounded-lg flex items-center justify-center">
-                          <Users className="h-4 w-4 text-green-600" />
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-7 sm:w-8 h-7 sm:h-8 bg-gradient-to-r from-green-100 to-green-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Users className="h-3.5 sm:h-4 w-3.5 sm:w-4 text-green-600" />
                         </div>
                         <div>
-                          <div className="font-medium text-gray-900">{recipe.servings || 'N/A'}</div>
+                          <div className="font-medium text-gray-900 text-xs sm:text-sm">{recipe.servings || 'N/A'}</div>
                           <div className="text-xs text-gray-500">Servings</div>
                         </div>
                       </div>
@@ -438,21 +439,21 @@ function SearchPageContent() {
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex gap-3">
+                    <div className="flex gap-2 sm:gap-3 mt-auto">
                       <Button 
-                        className="flex-1 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 gap-2"
+                        className="flex-1 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 gap-1.5 sm:gap-2 text-sm sm:text-base min-h-10 sm:min-h-11"
                         onClick={() => handleStartCooking(recipe, index)}
                         disabled={savingRecipes.has(recipe.id)}
                       >
                         {savingRecipes.has(recipe.id) ? (
                           <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Preparing...
+                            <Loader2 className="h-4 w-4 animate-spin flex-shrink-0" />
+                            <span className="hidden sm:inline">Preparing...</span>
                           </>
                         ) : (
                           <>
-                            <ChefHat className="h-4 w-4" />
-                            Start Cooking
+                            <ChefHat className="h-4 w-4 flex-shrink-0" />
+                            <span>Cook</span>
                           </>
                         )}
                       </Button>
@@ -462,13 +463,15 @@ function SearchPageContent() {
                           variant="outline" 
                           onClick={() => handleSaveRecipe(recipe)}
                           disabled={savingRecipes.has(recipe.id)}
-                          className="gap-2 border-2 hover:bg-orange-50 hover:border-orange-300 transition-all duration-300"
+                          className="gap-1.5 sm:gap-2 border-2 hover:bg-orange-50 hover:border-orange-300 transition-all duration-300 min-h-10 sm:min-h-11"
+                          title="Save recipe"
                         >
                           {savingRecipes.has(recipe.id) ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <Loader2 className="h-4 w-4 animate-spin flex-shrink-0" />
                           ) : (
-                            <Bookmark className="h-4 w-4" />
+                            <Bookmark className="h-4 w-4 flex-shrink-0" />
                           )}
+                          <span className="hidden sm:inline text-sm">Save</span>
                         </Button>
                       )}
                       
@@ -476,7 +479,8 @@ function SearchPageContent() {
                         <Button
                           variant="outline" 
                           disabled
-                          className="gap-2 border-green-200 bg-green-50"
+                          className="gap-1.5 sm:gap-2 border-green-200 bg-green-50 min-h-10 sm:min-h-11"
+                          title="Recipe saved"
                         >
                           <BookmarkCheck className="h-4 w-4 text-green-600" />
                         </Button>

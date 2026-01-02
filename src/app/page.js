@@ -15,16 +15,16 @@ function LandingPage() {
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 to-amber-500/5" />
-        <div className="container mx-auto px-4 py-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
           <div className="text-center max-w-4xl mx-auto">
             {/* Hero Badge */}
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-100 to-amber-100 text-orange-700 px-6 py-2 rounded-full text-sm font-medium mb-6">
-              <Sparkles className="h-4 w-4" />
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-100 to-amber-100 text-orange-700 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium mb-4 sm:mb-6">
+              <Sparkles className="h-3 sm:h-4 w-3 sm:w-4" />
               AI-Powered Cooking Assistant
             </div>
             
             {/* Hero Title */}
-            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6 leading-tight">
+            <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight">
               Cook Like a{" "}
               <span className="bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
                 Chef
@@ -34,28 +34,28 @@ function LandingPage() {
             </h1>
             
             {/* Hero Description */}
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-10 leading-relaxed">
+            <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed px-2">
               Transform your kitchen into a smart cooking space. Get personalized recipes, voice-guided instructions, and AI-powered nutrition analysis.
             </p>
             
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-8 sm:mb-12">
               <Link href="/search">
-                <Button size="lg" className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-8 py-4 text-lg gap-3 shadow-lg hover:shadow-xl transition-all duration-300">
+                <Button size="lg" className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg gap-2 shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto min-h-12 sm:min-h-14">
                   <ChefHat className="h-5 w-5" />
                   Start Cooking Now
                   <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
-              <Button variant="outline" size="lg" className="px-8 py-4 text-lg border-2 hover:bg-orange-50 transition-all duration-300">
+              <Button variant="outline" size="lg" className="px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg border-2 hover:bg-orange-50 transition-all duration-300 w-full sm:w-auto min-h-12 sm:min-h-14">
                 <Mic className="h-5 w-5 mr-2" />
                 Try Voice Demo
               </Button>
             </div>
             
             {/* Voice Demo Hint */}
-            <div className="bg-white/70 backdrop-blur-sm border border-orange-200/50 rounded-2xl p-6 max-w-lg mx-auto">
-              <p className="text-sm text-orange-700 font-medium">
+            <div className="bg-white/70 backdrop-blur-sm border border-orange-200/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 max-w-lg mx-auto">
+              <p className="text-xs sm:text-sm text-orange-700 font-medium">
                 💬 Try saying: &quot;What can I make with chicken and rice?&quot;
               </p>
             </div>
@@ -64,18 +64,18 @@ function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+      <section className="py-12 sm:py-16 lg:py-20 bg-white">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
               Why Choose CookAI?
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto">
               Experience the future of cooking with our AI-powered features designed to make you a better chef.
             </p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {/* Voice Commands */}
             <Card className="group hover:shadow-2xl transition-all duration-500 border-0 shadow-lg bg-gradient-to-br from-orange-50 to-white">
               <CardHeader className="text-center pb-2">

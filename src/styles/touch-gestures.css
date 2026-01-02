@@ -46,23 +46,77 @@ html {
 }
 
 /* Mobile-specific improvements */
-@media (max-width: 768px) {
-  /* Larger touch targets on mobile */
-  button, .touch-target {
+@media (max-width: 640px) {
+  /* Extra small devices - more aggressive touch target sizing */
+  button, a, .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better spacing for finger navigation */
+  .mobile-spacing {
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+  
+  /* Optimized text size for mobile reading */
+  .mobile-text {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  
+  /* Larger form inputs for easier interaction */
+  input, textarea, select {
+    min-height: 44px;
+    font-size: 16px !important; /* Prevents zoom on iOS */
+  }
+  
+  /* Better button spacing on mobile */
+  button {
+    letter-spacing: 0.3px;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 768px) {
+  /* Tablet - balanced touch targets */
+  button, a, .touch-target {
     min-height: 48px;
     min-width: 48px;
   }
   
-  /* Better spacing for finger navigation */
+  /* Better spacing for tablet navigation */
   .mobile-spacing {
     padding: 16px;
     margin-bottom: 12px;
   }
   
-  /* Optimized text size for mobile reading */
+  /* Optimized text size for tablet reading */
   .mobile-text {
     font-size: 16px;
-    line-height: 1.5;
+    line-height: 1.6;
+  }
+  
+  /* Tablet form inputs */
+  input, textarea, select {
+    min-height: 48px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  /* General mobile improvements */
+  * {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Better scrolling performance */
+  .scroll-smooth {
+    scroll-behavior: smooth;
+  }
+  
+  /* Prevent accidental zoom */
+  input, button, select, textarea {
+    font-size: 16px;
   }
 }
 

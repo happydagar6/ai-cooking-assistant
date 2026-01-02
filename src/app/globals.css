@@ -163,3 +163,58 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Mobile responsiveness improvements */
+@media (max-width: 640px) {
+  /* Prevent zoom on input focus */
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+  
+  /* Better text scaling on mobile */
+  html {
+    font-size: 16px;
+  }
+}
+
+/* Container padding improvements */
+.container {
+  @apply px-4 sm:px-6 lg:px-8;
+}
+
+/* Better form input accessibility */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Mobile-first utility classes */
+@layer components {
+  .mobile-safe {
+    @apply px-4 sm:px-6 py-4 sm:py-6;
+  }
+  
+  .mobile-card {
+    @apply rounded-xl sm:rounded-2xl p-4 sm:p-6;
+  }
+  
+  .mobile-heading {
+    @apply text-2xl sm:text-3xl font-bold;
+  }
+  
+  .mobile-button {
+    @apply min-h-12 sm:min-h-11 px-4 sm:px-6 py-2.5 sm:py-2;
+  }
+  
+  .mobile-input {
+    @apply min-h-12 px-3 sm:px-4 py-2.5 sm:py-2 text-base sm:text-sm;
+  }
+  
+  .mobile-spacing {
+    @apply gap-3 sm:gap-4 space-y-3 sm:space-y-4;
+  }
+}

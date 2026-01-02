@@ -63,13 +63,13 @@ export default function Navigation() {
             {/* Logo */}
             <Link
               href="/"
-              className="flex items-center gap-2 text-xl font-bold text-orange-600 hover:text-orange-700 transition-colors group"
+              className="flex items-center gap-2 text-base sm:text-xl font-bold text-orange-600 hover:text-orange-700 transition-colors group min-h-10 min-w-10"
             >
               <div className="relative">
-                <ChefHat className="h-7 w-7 group-hover:scale-110 transition-transform duration-200" />
-                <Sparkles className="h-3 w-3 absolute -top-1 -right-1 text-orange-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                <ChefHat className="h-6 sm:h-7 w-6 sm:w-7 group-hover:scale-110 transition-transform duration-200" />
+                <Sparkles className="h-2.5 sm:h-3 w-2.5 sm:w-3 absolute -top-1 -right-1 text-orange-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
               </div>
-              <span className="bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent hidden sm:inline">
                 CookAI
               </span>
             </Link>
@@ -84,7 +84,7 @@ export default function Navigation() {
                     <Button
                       variant={active ? "default" : "ghost"}
                       size="sm"
-                      className={`relative group transition-all duration-200 ${
+                      className={`relative group transition-all duration-200 min-h-10 ${
                         active
                           ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-md'
                           : 'hover:bg-orange-50 hover:text-orange-600'
@@ -102,12 +102,12 @@ export default function Navigation() {
             </div>
 
             {/* User Actions */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {user ? (
                 <div className="hidden sm:flex items-center gap-3">
-                  <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 px-3 py-1.5 rounded-full">
-                    <User className="h-4 w-4" />
-                    <span className="font-medium">
+                  <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600 bg-gray-50 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full">
+                    <User className="h-4 w-4 flex-shrink-0" />
+                    <span className="font-medium truncate max-w-[100px]">
                       {user.firstName || user.username || user.primaryEmailAddress?.emailAddress?.split('@')[0]}
                     </span>
                   </div>
@@ -124,7 +124,7 @@ export default function Navigation() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="hidden sm:flex hover:bg-orange-50 hover:border-orange-200 hover:text-orange-600 transition-all duration-200"
+                    className="hidden sm:flex hover:bg-orange-50 hover:border-orange-200 hover:text-orange-600 transition-all duration-200 min-h-10"
                   >
                     Sign In
                   </Button>
@@ -135,7 +135,7 @@ export default function Navigation() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="md:hidden p-2 hover:bg-orange-50"
+                className="md:hidden p-2 hover:bg-orange-50 min-h-10 min-w-10"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 aria-label="Toggle menu"
               >
@@ -153,7 +153,7 @@ export default function Navigation() {
         <div className={`md:hidden transition-all duration-300 overflow-hidden ${
           isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
         }`}>
-          <div className="bg-white border-t border-gray-100 px-4 py-4 space-y-2">
+          <div className="bg-white border-t border-gray-100 px-4 py-3 space-y-2">
             {navigationItems.map((item) => {
               const Icon = item.icon
               const active = isActive(item.href)
@@ -161,13 +161,13 @@ export default function Navigation() {
                 <Link key={item.href} href={item.href}>
                   <Button
                     variant={active ? "default" : "ghost"}
-                    className={`w-full justify-start transition-all duration-200 ${
+                    className={`w-full justify-start transition-all duration-200 min-h-12 ${
                       active
                         ? 'bg-orange-500 hover:bg-orange-600 text-white'
                         : 'hover:bg-orange-50 hover:text-orange-600'
                     }`}
                   >
-                    <Icon className="h-4 w-4 mr-3" />
+                    <Icon className="h-5 w-5 mr-3 flex-shrink-0" />
                     {item.label}
                   </Button>
                 </Link>
@@ -177,10 +177,10 @@ export default function Navigation() {
             {/* Mobile User Actions */}
             <div className="pt-2 border-t border-gray-100">
               {user ? (
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <User className="h-4 w-4" />
-                    <span className="font-medium">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 text-sm text-gray-600 min-h-12">
+                    <User className="h-5 w-5 flex-shrink-0" />
+                    <span className="font-medium truncate max-w-[100px]">
                       {user.firstName || user.username || user.primaryEmailAddress?.emailAddress?.split('@')[0]}
                     </span>
                   </div>
@@ -194,7 +194,7 @@ export default function Navigation() {
                 </div>
               ) : (
                 <SignInButton>
-                  <Button variant="outline" className="w-full hover:bg-orange-50 hover:border-orange-200">
+                  <Button variant="outline" className="w-full hover:bg-orange-50 hover:border-orange-200 min-h-12">
                     Sign In
                   </Button>
                 </SignInButton>

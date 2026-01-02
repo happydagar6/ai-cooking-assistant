@@ -34,26 +34,36 @@ export function VoiceSearchInput({ onSearch, placeholder, isLoading = false }) {
   }
 
   return (
-    <div className="flex gap-2">
-      <div className="flex-1 relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+    <div className="flex flex-col sm:flex-row gap-2 w-full">
+      <div className="flex-1 relative min-w-0">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
         <Input
           placeholder={placeholder}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyPress={handleKeyPress}
-          className="pl-10 h-12"
+          className="pl-10 h-12 sm:h-14 text-base sm:text-lg w-full"
+          autoFocus
+          type="search"
         />
       </div>
-      <Button onClick={handleSearch} disabled={isLoading || !query.trim()} size="lg">
-        {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Search"}
-      </Button>
-      <VoiceInputButton
-        onTranscript={handleVoiceTranscript}
-        onError={(error) => console.error("Voice error:", error)}
-        disabled={isLoading}
-        size="lg"
-      />
+      <div className="flex gap-2 w-full sm:w-auto">
+        <Button 
+          onClick={handleSearch} 
+          disabled={isLoading || !query.trim()} 
+          size="lg"
+          className="flex-1 sm:flex-none h-12 sm:h-14 text-base sm:text-lg min-h-12"
+        >
+          {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Search"}
+        </Button>
+        <VoiceInputButton
+          onTranscript={handleVoiceTranscript}
+          onError={(error) => console.error("Voice error:", error)}
+          disabled={isLoading}
+          size="lg"
+          className="h-12 sm:h-14 min-w-12"
+        />
+      </div>
     </div>
   )
 }
