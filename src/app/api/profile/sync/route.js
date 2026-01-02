@@ -48,7 +48,6 @@ export async function POST(req) {
         )
       }
 
-      console.log('Profile created successfully:', data)
       return NextResponse.json({ 
         success: true, 
         message: 'Profile created successfully',

@@ -6,7 +6,6 @@ export function usePreventDoubleSubmit(delay = 2000) {
 
   const executeOnce = async (callback) => {
     if (isSubmitting) {
-      console.warn('Request already in progress, ignoring duplicate submission');
       return null;
     }
 
@@ -32,7 +31,6 @@ export function createDebouncedSave(saveFunction, delay = 1000) {
 
   return async (...args) => {
     if (isExecuting) {
-      console.warn('Save already in progress, ignoring duplicate call');
       return;
     }
 

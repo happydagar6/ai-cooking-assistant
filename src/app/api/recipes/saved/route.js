@@ -7,20 +7,13 @@ import { createClient } from '@supabase/supabase-js';
 // Fetch saved recipes for authenticated user
 export async function GET(request) {
     try {
-        console.log('Saved recipes API called');
-        
         // Get user from Clerk auth - using await is correct
         const authResult = await auth();
-        console.log('Auth result userId:', authResult?.userId);
-        
         const userId = authResult?.userId;
         
         if (!userId) {
-            console.log('No userId found - returning 401');
             return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
         }
-        
-        console.log('Fetching saved recipes for user:', userId);
         
         // Use service role Supabase client to bypass RLS
         const supabase = createClient(
@@ -50,8 +43,6 @@ export async function GET(request) {
             console.error('Error fetching saved recipes:', error);
             throw error;
         }
-        
-        console.log('Found recipes:', recipesData?.length || 0);
         
         // Transform data to include user_recipe_data in the main recipe object
         const recipes = recipesData?.map(recipe => ({

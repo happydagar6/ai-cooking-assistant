@@ -20,8 +20,6 @@ setInterval(() => {
 // Save a new recipe or update existing one
 export async function POST(request) {
     try {
-        console.log('Save recipe API called');
-        
         const data = await request.json();
         const { recipe } = data;
 
@@ -31,16 +29,11 @@ export async function POST(request) {
 
         // Get user from Clerk auth - await the auth call
         const authResult = await auth();
-        console.log('Auth result:', authResult);
-        
         const { userId } = authResult;
         
         if (!userId) {
-            console.log('No userId found in auth result');
             return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
         }
-        
-        console.log('Authenticated user ID:', userId);
         
         // Create a unique request key to prevent duplicate saves
         const requestKey = `${userId}-${recipe.title.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()}`;
@@ -49,7 +42,6 @@ export async function POST(request) {
         
         // ✨ FIX: Reduced from 30 seconds to 5 seconds for better UX
         if (lastRequest && (now - lastRequest) < 5000) {
-            console.log(`Duplicate request detected for key: ${requestKey}`);
             return NextResponse.json({ 
                 error: 'Recipe was recently saved. Please wait 5 seconds before saving again.' 
             }, { status: 429 });
@@ -64,13 +56,8 @@ export async function POST(request) {
             process.env.SUPABASE_SERVICE_ROLE_KEY
         );
         
-        console.log('Created Supabase service role client');
-        console.log('Saving recipe for user:', userId);
-        
         // Use service role Supabase client to save recipe
         const savedRecipe = await RecipeService.saveRecipeWithAuth(recipe, userId, supabase);
-        
-        console.log('Recipe saved successfully:', savedRecipe);
         
         return NextResponse.json({ 
             recipe: savedRecipe,

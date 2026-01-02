@@ -26,7 +26,7 @@ export const ProfileSync = () => {
         })
 
         if (response.ok) {
-          console.log('Profile synced successfully for user:', user.id)
+          // Profile synced successfully
         } else {
           console.error('Failed to sync profile:', await response.text())
         }

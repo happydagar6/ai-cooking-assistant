@@ -5,8 +5,6 @@ import { createClient } from '@supabase/supabase-js';
 export class RecipeService {
   static async generateRecipes(query, userId = null) {
     try {
-      console.log('Generating fresh recipes for query:', query);
-
       // Get user preferences if logged in
       let userPreferences = {};
       if (userId) {
@@ -90,7 +88,6 @@ export class RecipeService {
         // Don't throw here - recipe is saved, just log the issue
       }
 
-      console.log(`Recipe saved successfully: ${recipe.title} (ID: ${recipe.id}) for user: ${userId}`);
       return recipe;
     } catch (error) {
       console.error("Error saving recipe:", error);
@@ -133,8 +130,6 @@ export class RecipeService {
         updated_at: new Date().toISOString()
       };
 
-      console.log('Inserting recipe with authenticated client:', validRecipeData);
-
       // Insert recipe into recipes table
       const { data: recipe, error: recipeError } = await authenticatedSupabase
         .from("recipes")
@@ -146,8 +141,6 @@ export class RecipeService {
         console.error('Supabase insert error:', recipeError);
         throw recipeError;
       }
-      
-      console.log('Recipe inserted successfully:', recipe);
 
       // Create corresponding entry in user_recipes table to link user to recipe
       const userRecipeData = {
@@ -163,8 +156,6 @@ export class RecipeService {
         updated_at: new Date().toISOString()
       };
 
-      console.log('Inserting user_recipe data:', userRecipeData);
-
       const { error: userRecipeError } = await authenticatedSupabase
         .from("user_recipes")
         .insert(userRecipeData);
@@ -172,8 +163,6 @@ export class RecipeService {
       if (userRecipeError) {
         console.error("Error creating user_recipes entry:", userRecipeError);
         // Don't throw here - recipe is saved, just log the issue
-      } else {
-        console.log(`User-recipe link created for recipe: ${recipe.id} and user: ${userId}`);
       }
 
       return recipe;
@@ -424,8 +413,6 @@ export class RecipeService {
   // Utility method to fix missing user_recipes entries for existing recipes
   static async fixMissingUserRecipeLinks(userId) {
     try {
-      console.log(`Fixing missing user_recipes entries for user: ${userId}`);
-      
       // Get all recipes created by this user
       const { data: userCreatedRecipes, error: recipesError } = await supabase
         .from("recipes")
@@ -435,7 +422,6 @@ export class RecipeService {
       if (recipesError) throw recipesError;
       
       if (!userCreatedRecipes || userCreatedRecipes.length === 0) {
-        console.log("No recipes found for user");
         return { fixed: 0, total: 0 };
       }
       
@@ -453,12 +439,8 @@ export class RecipeService {
       const missingLinks = userCreatedRecipes.filter(recipe => !existingRecipeIds.has(recipe.id));
       
       if (missingLinks.length === 0) {
-        console.log("No missing links found");
         return { fixed: 0, total: userCreatedRecipes.length };
       }
-      
-      console.log(`Found ${missingLinks.length} recipes missing user_recipes entries`);
-      
       // Create missing user_recipes entries
       const linksToCreate = missingLinks.map(recipe => ({
         user_id: userId,
@@ -476,8 +458,6 @@ export class RecipeService {
         console.error("Error creating missing user_recipes entries:", insertError);
         throw insertError;
       }
-      
-      console.log(`Successfully created ${missingLinks.length} missing user_recipes entries`);
       
       return { 
         fixed: missingLinks.length, 

@@ -137,7 +137,6 @@ export default function CookingModePage() {
           } else if (response.status === 401) {
             // Session might have expired due to dev server restart
             // Return empty state instead of erroring - user can refresh the page
-            console.warn("Session expired - please refresh the page to re-authenticate")
             setRecipe(null)
             setIsLoading(false)
             return
@@ -196,7 +195,6 @@ export default function CookingModePage() {
   // Handle TTS errors
   useEffect(() => {
     if (ttsError) {
-      console.log('TTS Error detected:', ttsError)
       showToast.error("Speech Error", ttsError)
     }
   }, [ttsError])
@@ -273,12 +271,10 @@ export default function CookingModePage() {
     if (!command) return
     
     const cmd = command.toLowerCase().trim()
-    console.log('🎤 Voice command received:', cmd)
     
     // Prevent duplicate commands within 2 seconds
     const now = Date.now()
     if (now - lastCommandTime < 2000) {
-      console.log('Ignoring duplicate command (too soon)')
       return
     }
     setLastCommandTime(now)
@@ -1184,41 +1180,7 @@ export default function CookingModePage() {
           </div>
         </div>
         
-        {/* Mobile Gesture Hints */}
-        {activeRecipe && (
-          <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 md:hidden">
-            <div className="bg-gray-900/80 backdrop-blur-sm text-white px-4 py-2 rounded-full border border-gray-700">
-              <div className="flex items-center gap-3 text-xs">
-                <div className="flex items-center gap-1">
-                  <ArrowLeft className="h-3 w-3" />
-                  <ArrowRight className="h-3 w-3" />
-                  <span>Swipe</span>
-                </div>
-                <div className="w-px h-3 bg-white/30" />
-                <div className="flex items-center gap-1">
-                  <RotateCcw className="h-3 w-3" />
-                  <span>Pull</span>
-                </div>
-                <div className="w-px h-3 bg-white/30" />
-                <div className="flex items-center gap-1">
-                  <Mic className="h-3 w-3" />
-                  <span>Voice</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Voice Command Hints for Mobile */}
-        {activeRecipe && (
-          <div className="fixed bottom-16 left-1/2 transform -translate-x-1/2 z-40 md:hidden">
-            <div className="bg-blue-900/80 backdrop-blur-sm text-white px-3 py-1 rounded-lg border border-blue-700 max-w-xs">
-              <div className="text-xs text-center">
-                Say: "next step" • "previous" • "repeat" • "start timer 5"
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Voice Command Hints - Hidden on Mobile */}
       </main>
       </div>
         </>

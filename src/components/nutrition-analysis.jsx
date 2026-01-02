@@ -55,26 +55,29 @@ export function NutritionAnalysis({ recipe, className = "" }) {
     return (
       <Card className={className}>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Activity className="h-5 w-5" />
-              <CardTitle>Nutrition Analysis</CardTitle>
-              <Badge variant="secondary">AI-Powered</Badge>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Activity className="h-5 w-5 flex-shrink-0" />
+              <CardTitle className="text-lg">Nutrition Analysis</CardTitle>
+              <Badge variant="secondary" className="text-xs">AI-Powered</Badge>
             </div>
             <Button 
               onClick={() => analyzeNutrition()} 
               disabled={isAnalyzing}
               size="sm"
+              className="w-full sm:w-auto text-xs sm:text-sm whitespace-nowrap"
             >
               {isAnalyzing ? (
                 <>
                   <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Analyzing...
+                  <span className="hidden sm:inline">Analyzing...</span>
+                  <span className="sm:hidden">Analyzing</span>
                 </>
               ) : (
                 <>
                   <Sparkles className="h-4 w-4 mr-2" />
-                  Analyze Nutrition
+                  <span className="hidden sm:inline">Analyze Nutrition</span>
+                  <span className="sm:hidden">Analyze</span>
                 </>
               )}
             </Button>
@@ -92,32 +95,34 @@ export function NutritionAnalysis({ recipe, className = "" }) {
   return (
     <Card className={className}>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Activity className="h-5 w-5" />
-            <CardTitle>Nutrition Analysis</CardTitle>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Activity className="h-5 w-5 flex-shrink-0" />
+            <CardTitle className="text-lg">Nutrition Analysis</CardTitle>
             <Badge 
               variant={nutrition.health_score >= 7 ? "default" : "secondary"}
-              className="flex items-center gap-1"
+              className="flex items-center gap-1 text-xs sm:text-sm"
             >
               <Heart className="h-3 w-3" />
               {nutrition.health_score}/10
             </Badge>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button 
               onClick={() => setIsExpanded(!isExpanded)} 
               variant="outline"
               size="sm"
+              className="text-xs sm:text-sm"
             >
               {isExpanded ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              {isExpanded ? 'Collapse' : 'Details'}
+              <span className="hidden xs:inline ml-1">{isExpanded ? 'Collapse' : 'Details'}</span>
             </Button>
             <Button 
               onClick={() => analyzeNutrition(true)} 
               disabled={isAnalyzing}
               variant="outline"
               size="sm"
+              className="text-xs sm:text-sm"
             >
               <RefreshCw className="h-4 w-4" />
             </Button>
@@ -126,10 +131,10 @@ export function NutritionAnalysis({ recipe, className = "" }) {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="detailed">Detailed</TabsTrigger>
-            <TabsTrigger value="insights">Insights</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 gap-1 sm:gap-0">
+            <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 sm:px-4">Overview</TabsTrigger>
+            <TabsTrigger value="detailed" className="text-xs sm:text-sm px-2 sm:px-4">Detailed</TabsTrigger>
+            <TabsTrigger value="insights" className="text-xs sm:text-sm px-2 sm:px-4">Insights</TabsTrigger>
           </TabsList>
           
           <TabsContent value="overview" className="space-y-4">

@@ -181,13 +181,13 @@ export function AnalyticsDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-2 sm:space-y-6">
       {/* Header with refresh button */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Analytics Dashboard</h2>
-          <p className="text-muted-foreground">
-            Track your cooking journey • Data cached for better performance
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start sm:gap-4 gap-2">
+        <div className="flex-1 min-w-0">
+          <h2 className="text-lg sm:text-2xl font-bold">Analytics Dashboard</h2>
+          <p className="text-xs text-muted-foreground mt-0.5 hidden sm:block">
+            Track your cooking journey
           </p>
         </div>
         <Button
@@ -195,15 +195,16 @@ export function AnalyticsDashboard() {
           size="sm"
           onClick={handleRefresh}
           disabled={isLoading}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 whitespace-nowrap text-xs sm:text-sm w-full sm:w-auto justify-center sm:justify-start"
         >
           <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-          {isLoading ? 'Refreshing...' : 'Refresh'}
+          <span className="hidden sm:inline">{isLoading ? 'Refreshing...' : 'Refresh'}</span>
+          <span className="sm:hidden">{isLoading ? 'Loading' : 'Refresh'}</span>
         </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         <StatsCard
           title="Recipes Created"
           value={analytics?.total_recipes_created || 0}
@@ -241,15 +242,15 @@ export function AnalyticsDashboard() {
 
       {/* Detailed Analytics with Tabs */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="cooking-time">Cooking Time</TabsTrigger>
-          <TabsTrigger value="features">Features</TabsTrigger>
-          <TabsTrigger value="favorites">Favorites</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1 sm:gap-0">
+          <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 sm:px-4">Overview</TabsTrigger>
+          <TabsTrigger value="cooking-time" className="text-xs sm:text-sm px-2 sm:px-4">Cooking</TabsTrigger>
+          <TabsTrigger value="features" className="hidden sm:inline-flex text-xs sm:text-sm px-2 sm:px-4">Features</TabsTrigger>
+          <TabsTrigger value="favorites" className="text-xs sm:text-sm px-2 sm:px-4">Favorites</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 gap-4">
             <CookingStreakCard analytics={analytics} />
             <RecentSessionsCard 
               sessions={recentSessions?.sessions || recentSessions || []} 
@@ -288,13 +289,13 @@ export function AnalyticsDashboard() {
 function StatsCard({ title, value, icon: Icon, description, color }) {
   return (
     <Card>
-      <CardContent className="p-4">
-        <div className="flex items-center space-x-2">
-          <Icon className={`h-5 w-5 ${color}`} />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <p className="text-2xl font-bold">{value}</p>
-            <p className="text-xs text-muted-foreground mt-1">{description}</p>
+      <CardContent className="p-3 sm:p-4">
+        <div className="flex flex-col items-start space-y-1 sm:space-y-2">
+          <Icon className={`h-4 sm:h-5 w-4 sm:w-5 ${color}`} />
+          <div className="flex-1 min-w-0 w-full">
+            <p className="text-xs sm:text-sm font-medium text-muted-foreground">{title}</p>
+            <p className="text-lg sm:text-2xl font-bold">{value}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
           </div>
         </div>
       </CardContent>

@@ -6,45 +6,34 @@ import { RecipeService } from '@/lib/recipe-service'
 
 export async function POST(request) {
   try {
-    console.log('🚀 NUTRITION POST ROUTE HIT AT:', new Date().toISOString())
-    
     // Check authentication manually since middleware isn't protecting this route
     const { userId, getToken } = await auth()
     
     if (!userId) {
-      console.log('❌ No userId, returning 401')
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       )
     }
 
-    console.log('✅ User authenticated:', userId)
-
     const { recipeId, forceRefresh = false } = await request.json()
-    console.log('📝 Request data:', { recipeId, forceRefresh })
 
     if (!recipeId) {
-      console.log('❌ No recipeId provided')
       return NextResponse.json(
         { error: 'Recipe ID is required' },
         { status: 400 }
       )
     }
 
-    console.log('🔍 Fetching recipe using RecipeService...')
     // Use RecipeService to get recipe (same as recipes API route)
     const recipe = await RecipeService.getRecipeById(recipeId, userId)
 
     if (!recipe) {
-      console.log('❌ Recipe not found via RecipeService')
       return NextResponse.json(
         { error: `Recipe with ID ${recipeId} not found or you don't have access to it.` },
         { status: 404 }
       )
     }
-
-    console.log('✅ Recipe found:', recipe.title)
 
     // Check if nutrition data already exists and is recent (optional caching)
     const supabase = createClerkSupabaseClient(getToken)
@@ -60,7 +49,6 @@ export async function POST(request) {
         const daysSince = (Date.now() - lastAnalyzed.getTime()) / (1000 * 60 * 60 * 24)
         
         if (daysSince < 7) { // Use cached data if less than 7 days old
-          console.log('🔄 Using cached nutrition data')
           return NextResponse.json({ 
             nutrition: existingNutrition,
             fromCache: true 
@@ -70,9 +58,7 @@ export async function POST(request) {
     }
 
     // Generate new nutrition analysis using AI
-    console.log('🤖 Starting AI nutrition analysis...')
     const nutritionData = await NutritionService.analyzeRecipeNutrition(recipe)
-    console.log('✅ AI analysis completed:', nutritionData)
 
     // Save to database
     const { data: savedNutrition, error: saveError } = await supabase
@@ -97,8 +83,6 @@ export async function POST(request) {
     if (saveError) {
       console.error('⚠️ Failed to save nutrition data:', saveError)
       // Still return the nutrition data even if saving fails
-    } else {
-      console.log('💾 Successfully saved nutrition data to database')
     }
 
     const responseData = { 
@@ -107,7 +91,6 @@ export async function POST(request) {
       message: 'AI nutrition analysis completed successfully'
     }
 
-    console.log('✅ Returning AI-generated nutrition data')
     return NextResponse.json(responseData)
 
   } catch (error) {

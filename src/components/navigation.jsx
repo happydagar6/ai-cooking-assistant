@@ -84,10 +84,10 @@ export default function Navigation() {
                     <Button
                       variant={active ? "default" : "ghost"}
                       size="sm"
-                      className={`relative group transition-all duration-200 min-h-10 ${
+                      className={`relative group transition-all duration-200 min-h-10 font-semibold ${
                         active
-                          ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-md'
-                          : 'hover:bg-orange-50 hover:text-orange-600'
+                          ? 'bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-lg'
+                          : 'text-gray-700 hover:bg-orange-100 hover:text-orange-700'
                       }`}
                     >
                       <Icon className="h-4 w-4 mr-2" />
@@ -120,31 +120,50 @@ export default function Navigation() {
                   />
                 </div>
               ) : (
-                <SignInButton>
+                <SignInButton mode="modal">
                   <Button
-                    variant="outline"
                     size="sm"
-                    className="hidden sm:flex hover:bg-orange-50 hover:border-orange-200 hover:text-orange-600 transition-all duration-200 min-h-10"
+                    className="flex bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-md hover:shadow-lg transition-all duration-200 min-h-10 font-semibold text-xs sm:text-sm px-2 sm:px-4"
                   >
-                    Sign In
+                    <span className="hidden sm:inline">Sign In / Sign Up</span>
+                    <span className="sm:hidden">Sign In</span>
                   </Button>
                 </SignInButton>
               )}
 
-              {/* Mobile Menu Button */}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="md:hidden p-2 hover:bg-orange-50 min-h-10 min-w-10"
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                aria-label="Toggle menu"
-              >
-                {isMobileMenuOpen ? (
-                  <X className="h-5 w-5" />
-                ) : (
-                  <Menu className="h-5 w-5" />
-                )}
-              </Button>
+              {/* Mobile Menu Button - only for logged in users or navigation links */}
+              {user && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="md:hidden p-2 hover:bg-orange-50 min-h-10 min-w-10"
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  aria-label="Toggle menu"
+                >
+                  {isMobileMenuOpen ? (
+                    <X className="h-5 w-5" />
+                  ) : (
+                    <Menu className="h-5 w-5" />
+                  )}
+                </Button>
+              )}
+
+              {/* Desktop Menu Button */}
+              {!user && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="md:hidden p-2 hover:bg-orange-50 min-h-10 min-w-10"
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  aria-label="Toggle menu"
+                >
+                  {isMobileMenuOpen ? (
+                    <X className="h-5 w-5" />
+                  ) : (
+                    <Menu className="h-5 w-5" />
+                  )}
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -161,10 +180,10 @@ export default function Navigation() {
                 <Link key={item.href} href={item.href}>
                   <Button
                     variant={active ? "default" : "ghost"}
-                    className={`w-full justify-start transition-all duration-200 min-h-12 ${
+                    className={`w-full justify-start transition-all duration-200 min-h-12 font-semibold ${
                       active
-                        ? 'bg-orange-500 hover:bg-orange-600 text-white'
-                        : 'hover:bg-orange-50 hover:text-orange-600'
+                        ? 'bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-md'
+                        : 'text-gray-700 hover:bg-orange-100 hover:text-orange-700'
                     }`}
                   >
                     <Icon className="h-5 w-5 mr-3 flex-shrink-0" />
@@ -193,9 +212,9 @@ export default function Navigation() {
                   />
                 </div>
               ) : (
-                <SignInButton>
-                  <Button variant="outline" className="w-full hover:bg-orange-50 hover:border-orange-200 min-h-12">
-                    Sign In
+                <SignInButton mode="modal">
+                  <Button className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-md min-h-12 font-semibold">
+                    Sign In / Sign Up
                   </Button>
                 </SignInButton>
               )}

@@ -35,7 +35,6 @@ export function useVoiceRecognition() {
       const hasSpeechRecognition = "webkitSpeechRecognition" in window || "SpeechRecognition" in window;
       
       if (!hasSpeechRecognition) {
-        console.log('Speech Recognition API not supported');
         setIsSupported(false);
         return false;
       }
@@ -53,14 +52,12 @@ export function useVoiceRecognition() {
           const safariVersion = navigator.userAgent.match(/Version\/(\d+)/);
           const version = safariVersion ? parseInt(safariVersion[1]) : 0;
           if (version < 14) {
-            console.log('iOS Safari version too old for reliable speech recognition');
             setIsSupported(false);
             return false;
           }
         }
       }
 
-      console.log(`Voice recognition supported on ${isMobile ? 'mobile' : 'desktop'} device`);
       return true;
     };
 
@@ -90,7 +87,6 @@ export function useVoiceRecognition() {
 
     // Handle start event
     recognition.onstart = () => {
-      console.log('Voice recognition started');
       setIsListening(true);
       setIsStopping(false);
       setError(null);
@@ -133,7 +129,6 @@ export function useVoiceRecognition() {
         const command = finalTranscript.toLowerCase().trim();
         if (command.includes("stop voice") || command.includes("stop listening") || 
             command.includes("stop command") || command === "stop") {
-          console.log('Stop command detected, disabling persistent mode');
           setPersistentMode(false);
           persistentModeRef.current = false;
           
@@ -176,19 +171,15 @@ export function useVoiceRecognition() {
       const timeoutDuration = isMobile ? 5000 : 8000; // 5s for mobile, 8s for desktop
       timeoutRef.current = setTimeout(() => {
         if(recognitionRef.current && recognitionRef.current.state !== 'inactive'){
-          console.log('Speech timeout reached, stopping recognition');
           recognitionRef.current.stop();
         }
       }, timeoutDuration);
     }
 
     recognition.onerror = (event) => {
-      console.log('Voice recognition error:', event.error);
-      
       // Handle different types of errors with mobile-specific messaging
       if (event.error === 'no-speech') {
         // No speech detected - this is normal, don't show as error
-        console.log('No speech detected, this is normal behavior');
         setIsListening(false);
         setIsStopping(false);
         return;
@@ -196,7 +187,6 @@ export function useVoiceRecognition() {
       
       if (event.error === 'aborted') {
         // Recognition was aborted - this is normal when stopping
-        console.log('Recognition aborted (normal when stopping)');
         setIsListening(false);
         setIsStopping(false);
         return;
@@ -229,7 +219,6 @@ export function useVoiceRecognition() {
     }
 
     recognition.onend = () => {
-      console.log('Voice recognition ended');
       setIsListening(false);
       setIsStopping(false);
       if(timeoutRef.current){
@@ -252,10 +241,9 @@ export function useVoiceRecognition() {
           if (currentPersistentMode && !currentIsPaused && recognitionRef.current && 
               (!recognitionRef.current.state || recognitionRef.current.state === 'inactive')) {
             try {
-              console.log('Auto-restarting voice recognition after command...');
               recognitionRef.current.start();
             } catch (error) {
-              console.log('Recognition auto-restart failed:', error);
+              console.error('Failed to auto-restart voice recognition:', error);
               setPersistentMode(false);
               persistentModeRef.current = false;
             }
@@ -263,7 +251,6 @@ export function useVoiceRecognition() {
         }, 500); // Shorter delay for faster restart after command
       } else if (persistentModeRef.current && !lastCommandRecognizedRef.current && !isPausedRef.current) {
         // If in persistent mode but no command recognized (likely no-speech), restart faster
-        console.log('No speech detected, restarting in persistent mode...');
         if(restartTimeoutRef.current) {
           clearTimeout(restartTimeoutRef.current);
         }
@@ -275,7 +262,7 @@ export function useVoiceRecognition() {
             try {
               recognitionRef.current.start();
             } catch (error) {
-              console.log('Recognition restart failed:', error);
+              console.error('Failed to restart voice recognition:', error);
             }
           }
         }, 1500); // Longer delay to reduce rapid cycling
@@ -307,8 +294,6 @@ export function useVoiceRecognition() {
 
   const startListening = useCallback((options = {}) => {
     if(!isSupported || !recognitionRef.current) {
-      console.log('Cannot start - not supported or no recognition instance');
-      
       // Mobile-specific error messages
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       const errorMessage = isMobile 
@@ -345,14 +330,13 @@ export function useVoiceRecognition() {
           // Add common cooking commands for better recognition
           recognitionRef.current.grammars.addFromString('#JSGF V1.0; grammar commands; public <command> = next | previous | stop | pause | resume | start timer | repeat;', 1);
         } catch (e) {
-          console.log('Grammar not supported, continuing without');
+          // Grammar not supported, continue without
         }
       }
     }
 
     // Start recognition
     try {
-      console.log('Starting voice recognition...' + (isMobile ? ' (mobile mode)' : ''));
       recognitionRef.current.start();
     } catch (error) {
       console.error('Failed to start voice recognition:', error);
@@ -378,7 +362,6 @@ export function useVoiceRecognition() {
 
   // Stop listening
   const stopListening = useCallback(() => {
-    console.log('Stop listening called');
     if(recognitionRef.current){
       try {
         // Disable persistent mode FIRST
@@ -414,7 +397,7 @@ export function useVoiceRecognition() {
         }, 800); // Increased timeout for better reliability
         
       } catch (error) {
-        console.error('Error stopping recognition:', error);
+        console.error('Error stopping voice recognition:', error);
         setIsListening(false);
         setIsStopping(false);
         setPersistentMode(false);
@@ -436,28 +419,26 @@ export function useVoiceRecognition() {
 
   // NEW: Pause voice recognition temporarily (e.g., while TTS audio is playing)
   const pauseListening = useCallback(() => {
-    console.log('Pausing voice recognition...');
     setIsPaused(true);
     isPausedRef.current = true;
     if(recognitionRef.current && recognitionRef.current.state !== 'inactive') {
       try {
         recognitionRef.current.stop();
       } catch (error) {
-        console.log('Error pausing recognition:', error);
+        console.error('Error pausing voice recognition:', error);
       }
     }
   }, []);
 
   // NEW: Resume voice recognition after pause
   const resumeListening = useCallback(() => {
-    console.log('Resuming voice recognition...');
     setIsPaused(false);
     isPausedRef.current = false;
     if(recognitionRef.current && persistentModeRef.current) {
       try {
         recognitionRef.current.start();
       } catch (error) {
-        console.log('Error resuming recognition:', error);
+        console.error('Error resuming voice recognition:', error);
       }
     }
   }, []);

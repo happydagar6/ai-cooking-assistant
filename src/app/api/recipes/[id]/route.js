@@ -14,11 +14,8 @@ export async function GET(request, { params }) {
         const { userId } = authResult;
         
         if (!userId) {
-            console.log('No authenticated user found');
             return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
         }
-
-        console.log('Fetching recipe:', id, 'for user:', userId);
 
         const recipe = await RecipeService.getRecipeById(id, userId);
 
@@ -26,7 +23,6 @@ export async function GET(request, { params }) {
             return NextResponse.json({ error: 'Recipe not found or access denied' }, { status: 404 });
         }
 
-        console.log('Recipe fetched successfully:', recipe.title);
         return NextResponse.json({ recipe });
     } catch (error) {
         console.error('Recipe API Error:', error);
@@ -63,21 +59,14 @@ export async function PUT(request, { params }) {
 export async function DELETE(request, { params }) {
     try {
         const { id } = await params; // Await params in Next.js 15
-        console.log('Delete recipe API called for ID:', id);
         
         // Get user from Clerk auth - await the auth call
         const authResult = await auth();
-        console.log('Auth result:', authResult);
-        
         const { userId } = authResult;
         
         if (!userId) {
-            console.log('No userId found in auth result');
             return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
         }
-
-        console.log('Authenticated user ID:', userId);
-        console.log('Deleting recipe ID:', id, 'for user:', userId);
 
         // Use service role Supabase client to bypass RLS
         const supabase = createClient(
@@ -96,8 +85,6 @@ export async function DELETE(request, { params }) {
             console.error('Error deleting recipe:', error);
             throw error;
         }
-        
-        console.log('Recipe deleted successfully');
         
         return NextResponse.json({ success: true });
     } catch (error) {

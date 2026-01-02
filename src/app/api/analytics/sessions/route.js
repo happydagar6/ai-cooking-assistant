@@ -35,9 +35,6 @@ export async function POST(request) {
         updated_at: new Date().toISOString()
       }
 
-      console.log('Creating cooking session for user:', userId)
-      console.log('Session data:', JSON.stringify(sessionData, null, 2))
-
       const { data: session, error } = await supabase
         .from('cooking_sessions')
         .insert(sessionData)
@@ -57,7 +54,6 @@ export async function POST(request) {
         )
       }
       
-      console.log('Session created successfully:', session.id)
       return NextResponse.json(session)
     }
 
