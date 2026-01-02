@@ -6,8 +6,19 @@ import { useVoiceRecognition } from "@/hooks/use-voice-recognition"
 import { useEffect } from "react"
 
 export function VoiceInputButton({ onTranscript, onError, disabled = false, size = "default", variant = "outline", persistent = false }) {
-  const { isListening, isStopping, transcript, finalTranscript, error, isSupported, persistentMode, startListening, stopListening, resetTranscript } =
+  const { isListening, isStopping, transcript, finalTranscript, error, isSupported, persistentMode, startListening, stopListening, resetTranscript, pauseListening, resumeListening } =
     useVoiceRecognition();
+
+  // Expose pause/resume functions for parent component
+  useEffect(() => {
+    window.pauseVoiceRecognition = pauseListening;
+    window.resumeVoiceRecognition = resumeListening;
+    
+    return () => {
+      delete window.pauseVoiceRecognition;
+      delete window.resumeVoiceRecognition;
+    };
+  }, [pauseListening, resumeListening]);
 
 
   // Handle transcript updates. Why useEffect instead of directly calling onTranscript in the hook?

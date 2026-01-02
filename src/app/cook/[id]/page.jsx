@@ -329,9 +329,16 @@ export default function CookingModePage() {
         triggerHapticFeedback('light')
         const currentInstruction = baseRecipe?.instructions?.[currentStep]
         if (currentInstruction) {
+          // Pause voice recognition while TTS audio is playing
+          window.pauseVoiceRecognition?.();
+          
           speakRecipeStep(currentInstruction, {
-            onEnd: () => setIsPlaying(false),
-            onStart: () => setIsPlaying(true)
+            onStart: () => setIsPlaying(true),
+            onEnd: () => {
+              setIsPlaying(false);
+              // Resume voice recognition after TTS audio finishes
+              setTimeout(() => window.resumeVoiceRecognition?.(), 300);
+            }
           })
           showToast.success("Playing step", "Reading current instruction")
           trackFeature('Text-to-Speech', { action: 'start_voice_command', step_number: currentStep + 1 })
@@ -345,6 +352,8 @@ export default function CookingModePage() {
         stop()
         setIsPlaying(false)
         triggerHapticFeedback('light')
+        // Resume voice recognition when audio is stopped
+        setTimeout(() => window.resumeVoiceRecognition?.(), 300);
         showToast.success("Paused", "Audio paused")
         trackFeature('Text-to-Speech', { action: 'stop_voice_command' })
       }

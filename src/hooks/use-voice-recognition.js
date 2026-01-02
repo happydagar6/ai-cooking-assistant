@@ -4,21 +4,28 @@ import { useCallback, useEffect, useRef, useState } from "react"
 
 export function useVoiceRecognition() {
   const [isListening, setIsListening] = useState(false);
-  const [isStopping, setIsStopping] = useState(false); // New state for immediate UI feedback
+  const [isStopping, setIsStopping] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [finalTranscript, setFinalTranscript] = useState("");
   const [error, setError] = useState(null);
   const [isSupported, setIsSupported] = useState(true);
-  const [persistentMode, setPersistentMode] = useState(false); // New: persistent listening mode
-  const persistentModeRef = useRef(false); // Ref to avoid stale closures
+  const [persistentMode, setPersistentMode] = useState(false);
+  const [isPaused, setIsPaused] = useState(false); // NEW: Track if paused by external code
+  const persistentModeRef = useRef(false);
+  const isPausedRef = useRef(false); // NEW: Ref for paused state
   const recognitionRef = useRef(null);
   const timeoutRef = useRef(null);
   const restartTimeoutRef = useRef(null);
+  const lastCommandRecognizedRef = useRef(false); // NEW: Track if command was just recognized
 
-  // Sync ref with state to avoid stale closures
+  // Sync refs with state to avoid stale closures
   useEffect(() => {
     persistentModeRef.current = persistentMode;
   }, [persistentMode]);
+
+  useEffect(() => {
+    isPausedRef.current = isPaused;
+  }, [isPaused]);
 
   // Create recognition instance only once
   useEffect(() => {
@@ -118,6 +125,9 @@ export function useVoiceRecognition() {
         // Set the final transcript WITHOUT accumulation to avoid duplicates
         setFinalTranscript(finalTranscript);
         setTranscript(finalTranscript);
+        
+        // NEW: Mark that a command was recognized
+        lastCommandRecognizedRef.current = true;
         
         // Check if this is a stop command
         const command = finalTranscript.toLowerCase().trim();
@@ -227,28 +237,48 @@ export function useVoiceRecognition() {
         timeoutRef.current = null;
       }
       
-      // Only restart if in persistent mode and recognition isn't already running
-      if (persistentModeRef.current) {
+      // Only restart if in persistent mode AND a command was just recognized AND not paused
+      if (persistentModeRef.current && lastCommandRecognizedRef.current && !isPausedRef.current) {
+        // Reset the command flag
+        lastCommandRecognizedRef.current = false;
+        
         if(restartTimeoutRef.current) {
           clearTimeout(restartTimeoutRef.current);
         }
         restartTimeoutRef.current = setTimeout(() => {
-          // Use ref to get current persistent mode value (avoids stale closure)
           const currentPersistentMode = persistentModeRef.current;
-          // Check if recognition is not already running and persistent mode is still active
-          if (currentPersistentMode && recognitionRef.current && 
+          const currentIsPaused = isPausedRef.current;
+          // Only restart if persistent mode still active and not paused
+          if (currentPersistentMode && !currentIsPaused && recognitionRef.current && 
               (!recognitionRef.current.state || recognitionRef.current.state === 'inactive')) {
             try {
-              console.log('Auto-restarting voice recognition...');
+              console.log('Auto-restarting voice recognition after command...');
               recognitionRef.current.start();
             } catch (error) {
               console.log('Recognition auto-restart failed:', error);
-              // If restart fails, disable persistent mode
               setPersistentMode(false);
               persistentModeRef.current = false;
             }
           }
-        }, 2500); // Longer delay to prevent rapid cycling and reduce duplicates
+        }, 500); // Shorter delay for faster restart after command
+      } else if (persistentModeRef.current && !lastCommandRecognizedRef.current && !isPausedRef.current) {
+        // If in persistent mode but no command recognized (likely no-speech), restart faster
+        console.log('No speech detected, restarting in persistent mode...');
+        if(restartTimeoutRef.current) {
+          clearTimeout(restartTimeoutRef.current);
+        }
+        restartTimeoutRef.current = setTimeout(() => {
+          const currentPersistentMode = persistentModeRef.current;
+          const currentIsPaused = isPausedRef.current;
+          if (currentPersistentMode && !currentIsPaused && recognitionRef.current && 
+              (!recognitionRef.current.state || recognitionRef.current.state === 'inactive')) {
+            try {
+              recognitionRef.current.start();
+            } catch (error) {
+              console.log('Recognition restart failed:', error);
+            }
+          }
+        }, 1500); // Longer delay to reduce rapid cycling
       }
     }
 
@@ -404,16 +434,47 @@ export function useVoiceRecognition() {
     setFinalTranscript("");
   }, []);
 
+  // NEW: Pause voice recognition temporarily (e.g., while TTS audio is playing)
+  const pauseListening = useCallback(() => {
+    console.log('Pausing voice recognition...');
+    setIsPaused(true);
+    isPausedRef.current = true;
+    if(recognitionRef.current && recognitionRef.current.state !== 'inactive') {
+      try {
+        recognitionRef.current.stop();
+      } catch (error) {
+        console.log('Error pausing recognition:', error);
+      }
+    }
+  }, []);
+
+  // NEW: Resume voice recognition after pause
+  const resumeListening = useCallback(() => {
+    console.log('Resuming voice recognition...');
+    setIsPaused(false);
+    isPausedRef.current = false;
+    if(recognitionRef.current && persistentModeRef.current) {
+      try {
+        recognitionRef.current.start();
+      } catch (error) {
+        console.log('Error resuming recognition:', error);
+      }
+    }
+  }, []);
+
   return {
-    isListening: isListening || isStopping, // Show as "listening" while stopping for better UX
+    isListening: isListening || isStopping,
     isStopping,
     transcript,
     finalTranscript,
     error,
     isSupported,
     persistentMode,
+    isPaused, // NEW: Export pause state
     startListening,
     stopListening,
     resetTranscript,
+    pauseListening, // NEW: Export pause function
+    resumeListening, // NEW: Export resume function
   }
 }
