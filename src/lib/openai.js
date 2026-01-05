@@ -189,4 +189,73 @@ export class OpenAIService {
       throw new Error("Failed to analyze nutrition");
     }
   }
+
+  /**
+   * Structure external recipe content using LLM
+   */
+  static async structureRecipe(textContent, sourceUrl) {
+    try {
+      const prompt = `You are a professional chef and recipe extraction AI. Extract recipe information from the following web content and structure it as a properly formatted recipe.
+
+Web Content:
+"""
+${textContent.slice(0, 3000)}
+"""
+
+Return ONLY valid JSON (no markdown, no code blocks) with this exact structure:
+{
+  "id": "external-${Date.now()}",
+  "title": "Recipe Name",
+  "description": "Brief description",
+  "ingredients": ["ingredient 1 with amount", "ingredient 2 with amount"],
+  "instructions": [{"stepNumber": 1, "instruction": "Step text"}],
+  "prep_time": 15,
+  "cook_time": 30,
+  "servings": 4,
+  "cuisine_type": "cuisine name",
+  "difficulty": "easy|medium|hard",
+  "dietary_tags": ["vegetarian", "vegan", etc],
+  "rating": 4.5,
+  "rating_count": 100,
+  "source_url": "${sourceUrl}",
+  "source_domain": "${new URL(sourceUrl).hostname}",
+  "isExternal": true
+}
+
+IMPORTANT:
+- Only return a recipe if there is a clear recipe in the content
+- Make ingredient measurements practical and clear
+- Ensure instructions are step-by-step and detailed
+- If rating information is not available, omit it
+- Return null if no recipe found`;
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini-2024-07-18",
+        messages: [
+          {
+            role: "system",
+            content: "You are a professional recipe extraction AI. Extract and structure recipes from web content. Return ONLY valid JSON, no markdown formatting."
+          },
+          { role: "user", content: prompt },
+        ],
+        max_completion_tokens: 2000,
+        temperature: 0.3,
+        response_format: { type: "json_object" },
+      });
+
+      const content = completion.choices[0].message.content;
+      const parsed = JSON.parse(content);
+      
+      // Validate recipe structure
+      if (!parsed.title || !parsed.ingredients || !parsed.instructions) {
+        return null;
+      }
+
+      return parsed;
+
+    } catch (error) {
+      console.error("OpenAI recipe structuring error:", error);
+      return null;
+    }
+  }
 }

@@ -6,6 +6,14 @@ import { useTouchGestures } from "@/hooks/use-touch-gestures";
 import { PullToRefreshIndicator } from "@/components/pull-to-refresh";
 import { FavoriteButton } from "@/components/favorite-button";
 import { useAuth } from "@/lib/auth-context";
+import { CollectionsManager } from "@/components/collections-manager";
+import { CollectionDetail } from "@/components/collection-detail";
+import { AddToCollectionButton } from "@/components/add-to-collection-button";
+import { WhatsForDinnerWidget } from "@/components/whats-for-dinner";
+import { TrendingRecipesCarousel, PopularRecipesCarousel } from "@/components/trending-popular-carousel";
+import { HybridTrendingCarousel } from "@/components/hybrid-trending-carousel";
+import { HybridPopularCarousel } from "@/components/hybrid-popular-carousel";
+import { useHybridMode } from "@/hooks/use-hybrid-recommendations";
 
 // ⚡ Lazy load analytics dashboard - only load when analytics tab is visible
 const AnalyticsDashboard = dynamic(
@@ -107,6 +115,9 @@ function DashboardContent() {
   // ✨ OPTIMIZED: Use mutation hook for deletions with optimistic updates
   const deleteRecipeMutation = useDeleteRecipeMutation(userId);
 
+  // 🌐 HYBRID MODE: Toggle between local and hybrid recommendations
+  const { enabled: hybridModeEnabled, toggle: toggleHybridMode } = useHybridMode(true);
+
   // UI state for filters and dialogs
   const [deletingRecipes, setDeletingRecipes] = useState(new Set());
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -131,6 +142,9 @@ function DashboardContent() {
   const [difficultyFilter, setDifficultyFilter] = useState("all");
   const [cuisineFilter, setCuisineFilter] = useState("all");
   const [timeFilter, setTimeFilter] = useState("all");
+
+  // Collections navigation state
+  const [selectedCollection, setSelectedCollection] = useState(null);
 
   // 🧠 SMART CATEGORIZATION: Organize recipes into meaningful categories
   const categorizedRecipes = useMemo(() => {
@@ -628,6 +642,62 @@ function DashboardContent() {
           </div>
         )}
 
+        {/* Collections Section */}
+        <section className="mb-8">
+          {selectedCollection ? (
+            <CollectionDetail
+              collectionId={selectedCollection.id}
+              onBack={() => setSelectedCollection(null)}
+            />
+          ) : (
+            <CollectionsManager
+              onCollectionSelect={setSelectedCollection}
+            />
+          )}
+        </section>
+
+        {/* Smart Recommendations Section */}
+        <section className="mb-8 space-y-6">
+          {/* What's for Dinner Widget */}
+          <WhatsForDinnerWidget className="px-4" />
+          
+          {/* Hybrid Mode Toggle */}
+          <div className="px-4 flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+            <div>
+              <p className="font-semibold text-sm text-blue-900 dark:text-blue-100">
+                {hybridModeEnabled ? '🌐 Hybrid Mode On' : '📚 Local Recipes Only'}
+              </p>
+              <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                {hybridModeEnabled 
+                  ? 'Showing recipes from your library + web searches' 
+                  : 'Showing recipes from your library only'}
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant={hybridModeEnabled ? 'default' : 'outline'}
+              onClick={() => toggleHybridMode(!hybridModeEnabled)}
+              className="whitespace-nowrap"
+            >
+              {hybridModeEnabled ? 'Disable' : 'Enable'} Hybrid
+            </Button>
+          </div>
+          
+          {/* Trending Recipes */}
+          {hybridModeEnabled ? (
+            <HybridTrendingCarousel limit={12} includeWeb={true} />
+          ) : (
+            <TrendingRecipesCarousel className="px-4" />
+          )}
+          
+          {/* Popular Recipes */}
+          {hybridModeEnabled ? (
+            <HybridPopularCarousel limit={12} includeWeb={true} />
+          ) : (
+            <PopularRecipesCarousel className="px-4" />
+          )}
+        </section>
+
         {/* Analytics Dashboard Section - Lazy loaded */}
         <section className="mb-8" id="analytics-section">
           <AnalyticsDashboard />
@@ -758,6 +828,8 @@ function DashboardContent() {
                             <span className="sm:hidden">Cook</span>
                           </Button>
                         </Link>
+
+                        <AddToCollectionButton recipeId={recipe.id} />
 
                         <Button
                           variant="outline"

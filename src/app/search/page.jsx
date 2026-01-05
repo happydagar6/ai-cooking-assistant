@@ -21,26 +21,48 @@ import {
   Star,
   TrendingUp,
   Filter,
-  ArrowRight
+  ArrowRight,
+  Globe
 } from "lucide-react"
 import { VoiceSearchInput } from "@/components/voice-search-input"
 import { BackNavigation } from "@/components/back-navigation"
 import { FavoriteButton } from "@/components/favorite-button"
+import { AddToCollectionButton } from "@/components/add-to-collection-button"
+import { WebSearchCarousel } from "@/components/web-search-carousel"
+import { SavedExternalRecipesSection } from "@/components/saved-external-recipes-section"
+import { useWebRecipes } from "@/hooks/use-web-recipes"
+import { useSavedExternalRecipes } from "@/hooks/use-saved-external-recipes"
 import { showToast, recipeToasts } from "@/lib/toast"
 import { useAuth } from "@/lib/auth-context"
 import ProtectedRoute from "@/components/protected-route"
 import Navigation from "@/components/navigation"
 import { useRouter } from "next/navigation"
+import { ExternalRecipeModal } from "@/components/external-recipe-modal"
 
 // ✨ Import optimized save recipe mutation for instant updates
 import { useSaveRecipeMutation } from "@/hooks/use-optimized-queries"
 
 function SearchPageContent() {
   const [isLoading, setIsLoading] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const [recipes, setRecipes] = useState([])
+  const [showWebSearch, setShowWebSearch] = useState(false)
   const [savingRecipes, setSavingRecipes] = useState(new Set())
+  // External recipe modal state
+  const [showExternalRecipeModal, setShowExternalRecipeModal] = useState(false)
+  const [selectedExternalRecipe, setSelectedExternalRecipe] = useState(null)
+  const [isLoadingExternalRecipe, setIsLoadingExternalRecipe] = useState(false)
   const { user } = useAuth()
   const router = useRouter()
+
+  // 🌐 Web search hook
+  const { data: webRecipes = [], isLoading: isWebSearching } = useWebRecipes(
+    showWebSearch && searchQuery ? searchQuery : '',
+    { limit: 12 }
+  )
+
+  // 🎯 Saved external recipes hook
+  const { data: savedRecipes = [], isLoading: isSavedRecipesLoading, refetch: refetchSavedRecipes } = useSavedExternalRecipes()
 
   // ✨ Use optimized save recipe mutation for instant dashboard updates
   const saveRecipeMutation = useSaveRecipeMutation(user?.id)
@@ -48,6 +70,7 @@ function SearchPageContent() {
   const handleSearch = async (query) => {
     if (!query.trim()) return; // Ignore empty queries
 
+    setSearchQuery(query)
     setIsLoading(true);
     const loadingToast = showToast.loading('AI is crafting perfect recipes...')
 
@@ -202,6 +225,58 @@ function SearchPageContent() {
         });
       }
     });
+  }
+
+  // Handler for viewing external recipes
+  const handleViewExternalRecipe = async (recipe) => {
+    if (!recipe) return;
+
+    try {
+      setIsLoadingExternalRecipe(true);
+      
+      // ✅ Check if recipe is already fully structured (from saved recipes)
+      // If it has ingredients and instructions, we don't need to call the LLM again
+      if (recipe.ingredients && Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0 &&
+          recipe.instructions && Array.isArray(recipe.instructions) && recipe.instructions.length > 0) {
+        // Recipe is already fully structured, use it directly
+        console.log('[View Recipe] Using cached structured recipe:', recipe.title);
+        setSelectedExternalRecipe(recipe);
+        setShowExternalRecipeModal(true);
+        setIsLoadingExternalRecipe(false);
+        return;
+      }
+
+      // Recipe needs to be fetched and structured
+      console.log('[View Recipe] Fetching and structuring recipe from:', recipe.source_url || recipe.sourceUrl);
+      const response = await fetch('/api/external-recipes/fetch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sourceUrl: recipe.source_url || recipe.sourceUrl,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch recipe');
+      }
+
+      const data = await response.json();
+      setSelectedExternalRecipe(data.recipe);
+      setShowExternalRecipeModal(true);
+      showToast.success('Recipe loaded!');
+    } catch (error) {
+      console.error('Error fetching recipe:', error);
+      showToast.error(error.message || 'Could not load recipe');
+    } finally {
+      setIsLoadingExternalRecipe(false);
+    }
+  }
+
+  // Handler for when a recipe is removed from saved
+  const handleRemoveSavedRecipe = (recipeId) => {
+    // Refetch saved recipes to update UI
+    refetchSavedRecipes();
   }
 
   // Function to get color based on difficulty
@@ -476,20 +551,70 @@ function SearchPageContent() {
                       )}
                       
                       {recipe.is_saved && (
-                        <Button
-                          variant="outline" 
-                          disabled
-                          className="gap-1.5 sm:gap-2 border-green-200 bg-green-50 min-h-10 sm:min-h-11"
-                          title="Recipe saved"
-                        >
-                          <BookmarkCheck className="h-4 w-4 text-green-600" />
-                        </Button>
+                        <>
+                          <Button
+                            variant="outline" 
+                            disabled
+                            className="gap-1.5 sm:gap-2 border-green-200 bg-green-50 min-h-10 sm:min-h-11"
+                            title="Recipe saved"
+                          >
+                            <BookmarkCheck className="h-4 w-4 text-green-600" />
+                          </Button>
+                          
+                          {/* Add to Collection Button - only show for saved recipes */}
+                          {recipe.id && !recipe.id.startsWith('temp-') && (
+                            <AddToCollectionButton recipeId={recipe.id} />
+                          )}
+                        </>
                       )}
                     </div>
                   </CardContent>
                 </Card>
               ))}
             </div>
+
+            {/* Web Search Toggle */}
+            <div className="mt-8 sm:mt-12 flex items-center gap-4">
+              <Separator className="flex-1" />
+              <Button
+                onClick={() => setShowWebSearch(!showWebSearch)}
+                variant="outline"
+                className="gap-2"
+              >
+                <Globe className="w-4 h-4" />
+                {showWebSearch ? 'Hide Web Recipes' : 'Search the Web'}
+              </Button>
+              <Separator className="flex-1" />
+            </div>
+          </div>
+        )}
+
+        {/* Web Search Results */}
+        {showWebSearch && searchQuery && (
+          <div className="mb-12 mt-8">
+            <WebSearchCarousel 
+              recipes={webRecipes} 
+              isLoading={isWebSearching}
+              onViewRecipe={handleViewExternalRecipe}
+              onRecipeClick={(recipe) => {
+                // Handle clicking a web recipe - open in new tab or show details
+                if (recipe.sourceUrl) {
+                  window.open(recipe.sourceUrl, '_blank', 'noopener,noreferrer');
+                }
+              }}
+            />
+          </div>
+        )}
+
+        {/* Saved External Recipes Section */}
+        {user && (
+          <div className="mb-12 mt-8">
+            <SavedExternalRecipesSection
+              recipes={savedRecipes}
+              isLoading={isSavedRecipesLoading}
+              onViewRecipe={handleViewExternalRecipe}
+              onRemoveFavorite={handleRemoveSavedRecipe}
+            />
           </div>
         )}
 
@@ -524,6 +649,20 @@ function SearchPageContent() {
             </div>
           </div>
         )}
+        
+        {/* External Recipe Modal */}
+        <ExternalRecipeModal
+          recipe={selectedExternalRecipe}
+          isOpen={showExternalRecipeModal}
+          onClose={() => {
+            setShowExternalRecipeModal(false);
+            setSelectedExternalRecipe(null);
+          }}
+          onFavoriteChange={() => {
+            // Refetch saved recipes when a favorite is added/removed
+            refetchSavedRecipes();
+          }}
+        />
       </main>
     </div>
   )

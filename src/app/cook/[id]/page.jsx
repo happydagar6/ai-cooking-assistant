@@ -5,6 +5,9 @@ import { FavoriteButton } from "@/components/favorite-button";
 import { useTouchGestures } from "@/hooks/use-touch-gestures";
 import { PullToRefreshIndicator } from "@/components/pull-to-refresh";
 import { SwipeFeedback } from "@/components/swipe-feedback";
+import { RecipeNotes } from "@/components/recipe-notes";
+import { SimilarRecipesSection } from "@/components/similar-recipes-section";
+import { useAutoTrackView } from "@/hooks/use-recommendations";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -97,6 +100,9 @@ export default function CookingModePage() {
 
   const { speak, speakRecipeStep, speakTimer, stop, isSpeaking, isLoading: ttsLoading, error: ttsError, isSupported: ttsSupported } = useOpenAITextToSpeech()
   const { isLoaded, isSignedIn } = useAuth()
+
+  // Auto-track recipe view (2-second delay to ensure real interest)
+  useAutoTrackView(params?.id);
 
   // Fetch recipe data on component mount
   useEffect(() => {
@@ -1177,6 +1183,34 @@ export default function CookingModePage() {
                 <LazyNutritionAnalysis recipe={activeRecipe} />
               </CardContent>
             </Card>
+
+            {/* Recipe Notes Section */}
+            {recipe?.id && (
+              <Card className="bg-white rounded-lg shadow-sm border border-gray-200">
+                <CardHeader className="bg-gray-800 text-white rounded-t-lg p-3">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <span className="text-sm">📝</span>
+                    Recipe Notes
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <RecipeNotes 
+                    recipeId={recipe.id} 
+                    currentStep={currentStep}
+                  />
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Similar Recipes Section */}
+            {recipe?.id && (
+              <div className="mt-8">
+                <SimilarRecipesSection 
+                  recipeId={recipe.id}
+                  className="w-full"
+                />
+              </div>
+            )}
           </div>
         </div>
         
