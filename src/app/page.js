@@ -11,35 +11,35 @@ import { useAuth } from "@/lib/auth-context";
 // Logged Out Landing Page Component
 function LandingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
-      {/* Hero Section - SIMPLIFIED & FOCUSED */}
+    <div className="min-h-screen bg-gradient-to-br from-white via-purple-50 to-cyan-50">
+      {/* Hero Section - Modern & Sleek */}
       <section className="relative overflow-hidden pt-8 pb-16 sm:pt-12 sm:pb-20">
-        <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 to-amber-500/5" />
+        <div className="absolute inset-0 bg-gradient-to-r from-teal-400/5 to-magenta-400/5" />
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto">
             {/* Hero Badge */}
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-100 to-amber-100 text-orange-700 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium mb-6">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-teal-100 to-cyan-100 text-teal-700 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium mb-6">
               <Sparkles className="h-3 sm:h-4 w-3 sm:w-4" />
               AI-Powered Cooking Assistant
             </div>
             
-            {/* Hero Title - Shorter */}
+            {/* Hero Title */}
             <h1 className="text-4xl sm:text-6xl font-bold text-gray-900 mb-6 leading-tight">
               Cook Like a{" "}
-              <span className="bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-teal-600 via-magenta-600 to-purple-600 bg-clip-text text-transparent">
                 Chef
               </span>
             </h1>
             
-            {/* Hero Description - Concise */}
+            {/* Hero Description */}
             <p className="text-lg sm:text-xl text-gray-600 mb-10 leading-relaxed">
               Get personalized recipes, voice-guided cooking, and AI nutrition insights in seconds.
             </p>
             
-            {/* Primary CTA - SIGN UP */}
+            {/* Primary CTA */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link href="/search">
-                <Button size="lg" className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-8 sm:px-10 py-3 sm:py-4 text-lg gap-2 shadow-xl hover:shadow-2xl transition-all duration-300 w-full sm:w-auto min-h-14 font-semibold">
+                <Button size="lg" className="bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white px-8 sm:px-10 py-3 sm:py-4 text-lg gap-2 shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto min-h-14 font-semibold">
                   <ChefHat className="h-5 w-5" />
                   Get Started Free
                 </Button>
@@ -47,7 +47,7 @@ function LandingPage() {
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="px-8 sm:px-10 py-3 sm:py-4 text-lg border-2 border-orange-200 hover:bg-orange-50 hover:border-orange-300 transition-all duration-300 w-full sm:w-auto min-h-14 font-semibold text-gray-900"
+                className="px-8 sm:px-10 py-3 sm:py-4 text-lg border-2 border-gray-300 hover:bg-gray-100 hover:border-gray-400 transition-all duration-300 w-full sm:w-auto min-h-14 font-semibold text-gray-900"
               >
                 <Mic className="h-5 w-5 mr-2" />
                 Try Voice Search
@@ -57,13 +57,13 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* Quick Features - MINIMAL */}
-      <section className="py-16 sm:py-20 bg-white border-t border-orange-100/50">
+      {/* Quick Features Section */}
+      <section className="py-16 sm:py-20 bg-white border-t border-gray-200">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-10">
             {/* Feature 1 */}
             <div className="text-center">
-              <div className="w-14 h-14 bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl mx-auto mb-4 flex items-center justify-center">
+              <div className="w-14 h-14 bg-gradient-to-r from-teal-600 to-cyan-600 rounded-2xl mx-auto mb-4 flex items-center justify-center">
                 <Mic className="h-7 w-7 text-white" />
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-2">Voice Guided</h3>
@@ -74,7 +74,7 @@ function LandingPage() {
 
             {/* Feature 2 */}
             <div className="text-center">
-              <div className="w-14 h-14 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl mx-auto mb-4 flex items-center justify-center">
+              <div className="w-14 h-14 bg-gradient-to-r from-magenta-600 to-purple-600 rounded-2xl mx-auto mb-4 flex items-center justify-center">
                 <Brain className="h-7 w-7 text-white" />
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-2">Smart AI</h3>
@@ -85,7 +85,7 @@ function LandingPage() {
 
             {/* Feature 3 */}
             <div className="text-center">
-              <div className="w-14 h-14 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl mx-auto mb-4 flex items-center justify-center">
+              <div className="w-14 h-14 bg-gradient-to-r from-purple-600 to-magenta-600 rounded-2xl mx-auto mb-4 flex items-center justify-center">
                 <TrendingUp className="h-7 w-7 text-white" />
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-2">Nutrition Data</h3>
@@ -97,28 +97,28 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* Social Proof - SIMPLE STATS */}
-      <section className="py-12 bg-gradient-to-r from-orange-500 to-amber-500">
+      {/* Social Proof Section */}
+      <section className="py-12 bg-gradient-to-r from-teal-600 via-magenta-600 to-purple-600">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-3 gap-6 text-center text-white">
             <div>
               <div className="text-3xl sm:text-4xl font-bold">10K+</div>
-              <div className="text-orange-100 text-sm sm:text-base mt-1">Recipes</div>
+              <div className="text-white/80 text-sm sm:text-base mt-1">Recipes</div>
             </div>
             <div>
               <div className="text-3xl sm:text-4xl font-bold">5K+</div>
-              <div className="text-orange-100 text-sm sm:text-base mt-1">Users</div>
+              <div className="text-white/80 text-sm sm:text-base mt-1">Users</div>
             </div>
             <div>
               <div className="text-3xl sm:text-4xl font-bold">4.9★</div>
-              <div className="text-orange-100 text-sm sm:text-base mt-1">Rating</div>
+              <div className="text-white/80 text-sm sm:text-base mt-1">Rating</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Bottom CTA - REPEAT */}
-      <section className="py-16 sm:py-20 bg-gray-50">
+      {/* Bottom CTA Section */}
+      <section className="py-16 sm:py-20 bg-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
             Ready to Cook Better?
@@ -127,7 +127,7 @@ function LandingPage() {
             Join thousands of home cooks using AI to make delicious meals every day.
           </p>
           <Link href="/search">
-            <Button size="lg" className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-10 py-4 text-lg gap-3 shadow-lg hover:shadow-xl transition-all duration-300 min-h-14 font-semibold">
+            <Button size="lg" className="bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white px-10 py-4 text-lg gap-3 shadow-lg hover:shadow-xl transition-all duration-300 min-h-14 font-semibold">
               <ChefHat className="h-5 w-5" />
               Start Cooking Now
             </Button>
@@ -141,12 +141,12 @@ function LandingPage() {
 // Logged In Dashboard Component
 function LoggedInHomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-white via-purple-50 to-cyan-50">
       <div className="container mx-auto px-4 py-12">
         {/* Welcome Header */}
         <div className="mb-12">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl flex items-center justify-center">
               <ChefHat className="h-6 w-6 text-white" />
             </div>
             <div>
@@ -158,10 +158,10 @@ function LoggedInHomePage() {
 
         {/* Quick Actions */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-0 shadow-md">
+          <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-0 shadow-md bg-white hover:border-teal-200">
             <Link href="/search">
               <CardContent className="p-6 text-center">
-                <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-amber-500 rounded-lg mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <div className="w-12 h-12 bg-gradient-to-r from-teal-600 to-cyan-600 rounded-lg mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                   <Mic className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">Voice Search</h3>
@@ -170,10 +170,10 @@ function LoggedInHomePage() {
             </Link>
           </Card>
 
-          <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-0 shadow-md">
+          <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-0 shadow-md bg-white hover:border-teal-200">
             <Link href="/search">
               <CardContent className="p-6 text-center">
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <div className="w-12 h-12 bg-gradient-to-r from-magenta-600 to-purple-600 rounded-lg mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                   <Search className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">Browse Recipes</h3>
@@ -182,10 +182,10 @@ function LoggedInHomePage() {
             </Link>
           </Card>
 
-          <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-0 shadow-md">
+          <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-0 shadow-md bg-white hover:border-teal-200">
             <Link href="/dashboard">
               <CardContent className="p-6 text-center">
-                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-magenta-600 rounded-lg mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                   <BookOpen className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">My Recipes</h3>
@@ -194,10 +194,10 @@ function LoggedInHomePage() {
             </Link>
           </Card>
 
-          <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-0 shadow-md">
+          <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-0 shadow-md bg-white hover:border-teal-200">
             <Link href="/search">
               <CardContent className="p-6 text-center">
-                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <div className="w-12 h-12 bg-gradient-to-r from-magenta-600 to-cyan-600 rounded-lg mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                   <Clock className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">Quick Meals</h3>
@@ -208,7 +208,7 @@ function LoggedInHomePage() {
         </div>
 
         {/* Featured Card */}
-        <Card className="bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0 shadow-lg">
+        <Card className="bg-gradient-to-r from-teal-600 via-magenta-600 to-purple-600 text-white border-0 shadow-lg">
           <CardContent className="p-4 sm:p-8">
             <div className="flex flex-col items-center text-center gap-4 sm:gap-6">
               <div className="hidden sm:block">
@@ -220,9 +220,9 @@ function LoggedInHomePage() {
               </div>
               <div>
                 <h2 className="text-xl sm:text-2xl font-bold mb-2">What would you like to cook?</h2>
-                <p className="text-sm sm:text-base text-orange-100 mb-4 sm:mb-6">Try voice search to get personalized recipes based on ingredients you have</p>
+                <p className="text-sm sm:text-base text-white/80 mb-4 sm:mb-6">Try voice search to get personalized recipes based on ingredients you have</p>
                 <Link href="/search">
-                  <Button size="sm" className="bg-white text-orange-600 hover:bg-orange-50 gap-2 font-semibold text-xs sm:text-base">
+                  <Button size="sm" className="bg-white text-teal-600 hover:bg-gray-100 gap-2 font-semibold text-xs sm:text-base">
                     <Mic className="h-4 sm:h-5 w-4 sm:w-5" />
                     Start Voice Search
                   </Button>
@@ -242,10 +242,10 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted flex flex-col">
+      <div className="min-h-screen bg-gradient-to-br from-white via-purple-50 to-cyan-50 flex flex-col">
         <Navigation />
         <div className="flex-grow flex items-center justify-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500"></div>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-teal-600"></div>
         </div>
       </div>
     );

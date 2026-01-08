@@ -12,7 +12,7 @@
 
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { showToast } from '@/lib/toast';
 
@@ -28,41 +28,6 @@ export const recommendationKeys = {
   completeMeal: (context) => ['recommendations', 'complete-meal', context],
   personalized: (page) => ['recommendations', 'personalized', page],
 };
-
-// ============================================
-// "WHAT'S FOR DINNER?" RECOMMENDATION
-// ============================================
-export function useWhatsForDinner(context = {}) {
-  const {
-    timeAvailable = 60,
-    mealType = 'dinner',
-    servings = 2,
-  } = context;
-
-  return useQuery({
-    queryKey: recommendationKeys.dinner({ timeAvailable, mealType, servings }),
-    queryFn: async () => {
-      const params = new URLSearchParams({
-        timeAvailable: timeAvailable.toString(),
-        mealType,
-        servings: servings.toString(),
-      });
-
-      const response = await fetch(`/api/recommendations/dinner?${params}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch dinner recommendations');
-      }
-
-      const data = await response.json();
-      return data.recommendations || [];
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes - recommendations stay fresh
-    gcTime: 10 * 60 * 1000, // 10 minutes in cache
-    retry: 2,
-    refetchOnWindowFocus: false, // Don't refetch when window gains focus
-  });
-}
 
 // ============================================
 // SIMILAR RECIPES
@@ -88,53 +53,6 @@ export function useSimilarRecipes(recipeId, options = {}) {
     enabled: enabled && !!recipeId,
     staleTime: 10 * 60 * 1000, // 10 minutes - similar recipes don't change often
     gcTime: 30 * 60 * 1000, // 30 minutes in cache
-    retry: 2,
-  });
-}
-
-// ============================================
-// TRENDING RECIPES
-// ============================================
-export function useTrendingRecipes(limit = 12) {
-  return useQuery({
-    queryKey: recommendationKeys.trending(),
-    queryFn: async () => {
-      const params = new URLSearchParams({ limit: limit.toString() });
-      const response = await fetch(`/api/recommendations/trending?${params}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch trending recipes');
-      }
-
-      const data = await response.json();
-      return data.recipes || [];
-    },
-    staleTime: 2 * 60 * 1000, // 2 minutes - trending updates frequently
-    gcTime: 5 * 60 * 1000, // 5 minutes in cache
-    retry: 2,
-    refetchInterval: 5 * 60 * 1000, // Auto-refetch every 5 minutes in background
-  });
-}
-
-// ============================================
-// POPULAR RECIPES (All-time)
-// ============================================
-export function usePopularRecipes(limit = 12) {
-  return useQuery({
-    queryKey: recommendationKeys.popular(),
-    queryFn: async () => {
-      const params = new URLSearchParams({ limit: limit.toString() });
-      const response = await fetch(`/api/recommendations/popular?${params}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch popular recipes');
-      }
-
-      const data = await response.json();
-      return data.recipes || [];
-    },
-    staleTime: 30 * 60 * 1000, // 30 minutes - popular recipes change slowly
-    gcTime: 60 * 60 * 1000, // 1 hour in cache
     retry: 2,
   });
 }
@@ -312,12 +230,18 @@ export function usePrefetchTrending() {
 
 /**
  * Auto-track recipe view when component mounts
+ * Only tracks once per recipe ID
  */
 export function useAutoTrackView(recipeId) {
   const trackInteraction = useTrackInteraction();
+  const hasTrackedRef = useRef(false); // Track if we've already sent the view
 
   useEffect(() => {
-    if (!recipeId) return;
+    // Don't track if no recipe ID or already tracked this recipe
+    if (!recipeId || hasTrackedRef.current) return;
+
+    // Mark as tracked to prevent duplicate calls
+    hasTrackedRef.current = true;
 
     // Track view after 2 seconds (user actually viewing, not just passing by)
     const timer = setTimeout(() => {
@@ -329,7 +253,7 @@ export function useAutoTrackView(recipeId) {
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [recipeId, trackInteraction]);
+  }, [recipeId]); // Only depend on recipeId
 }
 
 /**

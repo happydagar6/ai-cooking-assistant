@@ -3,7 +3,6 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 const isProtectedRoute = createRouteMatcher([
   '/dashboard(.*)',
   '/api/recipes/save(.*)',
-  // '/api/recipes/saved', - Handle auth in the endpoint instead
   '/api/recipes/[id]',
   '/api/analytics(.*)',
   '/api/favorites(.*)',

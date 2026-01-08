@@ -93,8 +93,8 @@ export function SimilarRecipesSection({ recipeId, className = '' }) {
           {/* Mobile: Horizontal Scroll */}
           <div
             ref={scrollContainerRef}
-            className="md:hidden flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            className="md:hidden flex flex-nowrap gap-3 overflow-x-auto overflow-y-hidden pb-3 scrollbar-hide"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
           >
             {recipes.map((recipe, index) => (
               <SimilarRecipeCard
@@ -102,6 +102,7 @@ export function SimilarRecipesSection({ recipeId, className = '' }) {
                 recipe={recipe}
                 index={index}
                 sourceRecipeId={recipeId}
+                isMobile={true}
                 onHover={() => prefetchSimilar(recipe.id)}
               />
             ))}
@@ -115,6 +116,7 @@ export function SimilarRecipesSection({ recipeId, className = '' }) {
                 recipe={recipe}
                 index={index}
                 sourceRecipeId={recipeId}
+                isMobile={false}
                 onHover={() => prefetchSimilar(recipe.id)}
               />
             ))}
@@ -134,7 +136,7 @@ export function SimilarRecipesSection({ recipeId, className = '' }) {
   );
 }
 
-function SimilarRecipeCard({ recipe, index, sourceRecipeId, onHover }) {
+function SimilarRecipeCard({ recipe, index, sourceRecipeId, isMobile = false, onHover }) {
   const trackInteraction = useTrackInteraction();
 
   const handleClick = () => {
@@ -145,7 +147,7 @@ function SimilarRecipeCard({ recipe, index, sourceRecipeId, onHover }) {
         source: 'similar_recipes',
         source_recipe_id: sourceRecipeId,
         position: index,
-        similarity_score: recipe.similarity_score,
+        similarity_score: recipe.similarityScore,
       },
     });
   };
@@ -163,20 +165,90 @@ function SimilarRecipeCard({ recipe, index, sourceRecipeId, onHover }) {
     }
   };
 
-  const similarityPercentage = Math.round((recipe.similarity_score / 100) * 100);
+  const similarityPercentage = recipe.similarityScore ? Math.round(recipe.similarityScore) : 0;
 
+  if (isMobile) {
+    // Mobile: Simple div-based card without Card component bloat
+    return (
+      <Link 
+        href={`/cook/${recipe.id}`} 
+        onClick={handleClick}
+        onMouseEnter={onHover}
+        className="flex-shrink-0 block"
+        style={{ minWidth: '240px', maxWidth: '240px' }}
+      >
+        <div className="rounded-lg border border-gray-200 bg-white overflow-hidden hover:shadow-lg transition-all duration-300 h-full flex flex-col">
+          {/* Image Placeholder / Gradient */}
+          <div className="relative bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 h-32 flex-shrink-0">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <ChefHat className="h-12 w-12 text-purple-300" />
+            </div>
+            
+            {/* Similarity Score Badge */}
+            <div className="absolute top-2 right-2 bg-white/95 backdrop-blur-sm rounded-full px-2 py-1 flex items-center gap-1 shadow-sm">
+              <Target className="h-3 w-3 text-purple-600" />
+              <span className="text-xs font-bold text-gray-800">
+                {similarityPercentage}%
+              </span>
+            </div>
+
+            {/* Difficulty Badge */}
+            <div className="absolute bottom-2 left-2">
+              <Badge className={`${getDifficultyColor(recipe.difficulty)} text-xs`}>
+                {recipe.difficulty}
+              </Badge>
+            </div>
+          </div>
+
+          {/* Recipe Info */}
+          <div className="p-3 flex flex-col gap-2 flex-grow">
+            <h4 className="font-bold text-sm text-gray-900 line-clamp-2 hover:text-purple-600 transition-colors">
+              {recipe.title}
+            </h4>
+
+            <p className="text-xs text-gray-600 line-clamp-1">
+              {recipe.description}
+            </p>
+
+            {/* Stats */}
+            <div className="flex items-center gap-2 text-xs text-gray-600 pt-1 flex-wrap">
+              <div className="flex items-center gap-1">
+                <Clock className="h-3 w-3 text-purple-500" />
+                <span>{recipe.prep_time + recipe.cook_time}m</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Users className="h-3 w-3 text-purple-500" />
+                <span>{recipe.servings}</span>
+              </div>
+            </div>
+
+            {/* Cuisine Type */}
+            <div className="pt-1">
+              <Badge variant="secondary" className="text-xs">
+                {recipe.cuisine_type}
+              </Badge>
+            </div>
+          </div>
+        </div>
+      </Link>
+    );
+  }
+
+  // Desktop: Use Card component
   return (
     <Link 
       href={`/cook/${recipe.id}`} 
       onClick={handleClick}
       onMouseEnter={onHover}
     >
-      <Card className="md:flex-none flex-shrink-0 w-72 md:w-full hover:shadow-xl transition-all duration-300 border-0 bg-white snap-start group h-full">
-        <CardContent className="p-4 flex flex-col h-full">
+      <Card 
+        className="hover:shadow-xl transition-all duration-300 border-0 bg-white group w-full"
+      >
+        <CardContent className="p-3 flex flex-col gap-2">
           {/* Image Placeholder / Gradient */}
-          <div className="relative mb-3 rounded-lg overflow-hidden bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 h-36">
+          <div className="relative rounded-lg overflow-hidden bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 h-32">
             <div className="absolute inset-0 flex items-center justify-center">
-              <ChefHat className="h-14 w-14 text-purple-300 group-hover:scale-110 transition-transform" />
+              <ChefHat className="h-12 w-12 text-purple-300 group-hover:scale-110 transition-transform" />
             </div>
             
             {/* Similarity Score Badge */}
@@ -196,17 +268,17 @@ function SimilarRecipeCard({ recipe, index, sourceRecipeId, onHover }) {
           </div>
 
           {/* Recipe Info */}
-          <div className="space-y-2 flex-1 flex flex-col">
+          <div className="space-y-1">
             <h4 className="font-bold text-sm text-gray-900 line-clamp-2 group-hover:text-purple-600 transition-colors">
               {recipe.title}
             </h4>
 
-            <p className="text-xs text-gray-600 line-clamp-2 flex-1">
+            <p className="text-xs text-gray-600 line-clamp-1">
               {recipe.description}
             </p>
 
             {/* Stats */}
-            <div className="flex items-center gap-4 text-xs text-gray-600 pt-2 border-t border-gray-100 mt-auto">
+            <div className="flex items-center gap-3 text-xs text-gray-600 pt-1">
               <div className="flex items-center gap-1">
                 <Clock className="h-3 w-3 text-purple-500" />
                 <span>{recipe.prep_time + recipe.cook_time}m</span>
@@ -215,11 +287,9 @@ function SimilarRecipeCard({ recipe, index, sourceRecipeId, onHover }) {
                 <Users className="h-3 w-3 text-purple-500" />
                 <span>{recipe.servings}</span>
               </div>
-              <div className="flex-1 text-right">
-                <Badge variant="secondary" className="text-xs">
-                  {recipe.cuisine_type}
-                </Badge>
-              </div>
+              <Badge variant="secondary" className="text-xs ml-auto">
+                {recipe.cuisine_type}
+              </Badge>
             </div>
 
             {/* Similarity Reasons (if available) */}

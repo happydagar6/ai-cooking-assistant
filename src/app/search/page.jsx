@@ -21,23 +21,18 @@ import {
   Star,
   TrendingUp,
   Filter,
-  ArrowRight,
-  Globe
+  ArrowRight
 } from "lucide-react"
 import { VoiceSearchInput } from "@/components/voice-search-input"
 import { BackNavigation } from "@/components/back-navigation"
 import { FavoriteButton } from "@/components/favorite-button"
 import { AddToCollectionButton } from "@/components/add-to-collection-button"
-import { WebSearchCarousel } from "@/components/web-search-carousel"
-import { SavedExternalRecipesSection } from "@/components/saved-external-recipes-section"
-import { useWebRecipes } from "@/hooks/use-web-recipes"
-import { useSavedExternalRecipes } from "@/hooks/use-saved-external-recipes"
+
 import { showToast, recipeToasts } from "@/lib/toast"
 import { useAuth } from "@/lib/auth-context"
 import ProtectedRoute from "@/components/protected-route"
 import Navigation from "@/components/navigation"
 import { useRouter } from "next/navigation"
-import { ExternalRecipeModal } from "@/components/external-recipe-modal"
 
 // ✨ Import optimized save recipe mutation for instant updates
 import { useSaveRecipeMutation } from "@/hooks/use-optimized-queries"
@@ -46,23 +41,9 @@ function SearchPageContent() {
   const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [recipes, setRecipes] = useState([])
-  const [showWebSearch, setShowWebSearch] = useState(false)
   const [savingRecipes, setSavingRecipes] = useState(new Set())
-  // External recipe modal state
-  const [showExternalRecipeModal, setShowExternalRecipeModal] = useState(false)
-  const [selectedExternalRecipe, setSelectedExternalRecipe] = useState(null)
-  const [isLoadingExternalRecipe, setIsLoadingExternalRecipe] = useState(false)
   const { user } = useAuth()
   const router = useRouter()
-
-  // 🌐 Web search hook
-  const { data: webRecipes = [], isLoading: isWebSearching } = useWebRecipes(
-    showWebSearch && searchQuery ? searchQuery : '',
-    { limit: 12 }
-  )
-
-  // 🎯 Saved external recipes hook
-  const { data: savedRecipes = [], isLoading: isSavedRecipesLoading, refetch: refetchSavedRecipes } = useSavedExternalRecipes()
 
   // ✨ Use optimized save recipe mutation for instant dashboard updates
   const saveRecipeMutation = useSaveRecipeMutation(user?.id)
@@ -227,111 +208,59 @@ function SearchPageContent() {
     });
   }
 
-  // Handler for viewing external recipes
-  const handleViewExternalRecipe = async (recipe) => {
-    if (!recipe) return;
-
-    try {
-      setIsLoadingExternalRecipe(true);
-      
-      // ✅ Check if recipe is already fully structured (from saved recipes)
-      // If it has ingredients and instructions, we don't need to call the LLM again
-      if (recipe.ingredients && Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0 &&
-          recipe.instructions && Array.isArray(recipe.instructions) && recipe.instructions.length > 0) {
-        // Recipe is already fully structured, use it directly
-        console.log('[View Recipe] Using cached structured recipe:', recipe.title);
-        setSelectedExternalRecipe(recipe);
-        setShowExternalRecipeModal(true);
-        setIsLoadingExternalRecipe(false);
-        return;
-      }
-
-      // Recipe needs to be fetched and structured
-      console.log('[View Recipe] Fetching and structuring recipe from:', recipe.source_url || recipe.sourceUrl);
-      const response = await fetch('/api/external-recipes/fetch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sourceUrl: recipe.source_url || recipe.sourceUrl,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch recipe');
-      }
-
-      const data = await response.json();
-      setSelectedExternalRecipe(data.recipe);
-      setShowExternalRecipeModal(true);
-      showToast.success('Recipe loaded!');
-    } catch (error) {
-      console.error('Error fetching recipe:', error);
-      showToast.error(error.message || 'Could not load recipe');
-    } finally {
-      setIsLoadingExternalRecipe(false);
-    }
-  }
-
-  // Handler for when a recipe is removed from saved
-  const handleRemoveSavedRecipe = (recipeId) => {
-    // Refetch saved recipes to update UI
-    refetchSavedRecipes();
-  }
-
   // Function to get color based on difficulty
   const getDifficultyColor = (difficulty) => {
     switch (difficulty) {
       case "easy":
-        return "bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border-green-200"
+        return "bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700 border-emerald-200"
       case "medium":
-        return "bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 border-yellow-200"
+        return "bg-gradient-to-r from-cyan-100 to-teal-100 text-cyan-700 border-cyan-200"
       case "hard":
-        return "bg-gradient-to-r from-red-100 to-rose-100 text-red-800 border-red-200"
+        return "bg-gradient-to-r from-slate-200 to-slate-300 text-slate-700 border-slate-300"
       default:
-        return "bg-gradient-to-r from-gray-100 to-slate-100 text-gray-800 border-gray-200"
+        return "bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 border-slate-200"
     }
   }
 
   const quickSuggestions = [
-    { text: "Quick breakfast with eggs", icon: "🥚", color: "from-yellow-400 to-orange-400" },
-    { text: "Healthy dinner for two", icon: "🥗", color: "from-green-400 to-emerald-400" },
-    { text: "Vegetarian pasta dish", icon: "🍝", color: "from-red-400 to-pink-400" },
-    { text: "Something with chicken", icon: "🍗", color: "from-amber-400 to-yellow-400" },
-    { text: "Easy dessert recipe", icon: "🍰", color: "from-purple-400 to-pink-400" },
+    { text: "Quick breakfast with eggs", icon: "🥚", color: "from-slate-400 to-slate-500" },
+    { text: "Healthy dinner for two", icon: "🥗", color: "from-teal-400 to-emerald-400" },
+    { text: "Vegetarian pasta dish", icon: "🍝", color: "from-cyan-400 to-teal-400" },
+    { text: "Something with chicken", icon: "🍗", color: "from-slate-400 to-slate-500" },
+    { text: "Easy dessert recipe", icon: "🍰", color: "from-teal-400 to-cyan-400" },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-orange-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
       <Navigation />
       
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-grow">
         {/* Hero Search Section */}
         <div className="relative mb-8 sm:mb-12">
           {/* Background decoration */}
-          <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 to-amber-500/5 rounded-2xl sm:rounded-3xl" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-400/5 to-teal-400/5 rounded-2xl sm:rounded-3xl" />
           <div className="absolute top-2 sm:top-4 right-2 sm:right-4 opacity-10 sm:opacity-20">
-            <Sparkles className="h-20 sm:h-32 w-20 sm:w-32 text-orange-500" />
+            <Sparkles className="h-20 sm:h-32 w-20 sm:w-32 text-slate-600" />
           </div>
           
           <div className="relative max-w-4xl mx-auto text-center py-8 sm:py-12 lg:py-16 px-4 sm:px-6 lg:px-8">
             {/* Hero Badge */}
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-100 to-amber-100 text-orange-700 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium mb-4 sm:mb-6">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-slate-200 to-teal-100 text-slate-700 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium mb-4 sm:mb-6">
               <Sparkles className="h-3 sm:h-4 w-3 sm:w-4" />
               AI-Powered Recipe Discovery
             </div>
             
             {/* Hero Title */}
-            <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight">
+            <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-slate-900 mb-4 sm:mb-6 leading-tight">
               What Sounds{" "}
-              <span className="bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
                 Delicious
               </span>{" "}
               Today?
             </h1>
             
             {/* Hero Description */}
-            <p className="text-base sm:text-lg lg:text-xl text-gray-600 mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg lg:text-xl text-slate-600 mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed">
               Tell me your ingredients, dietary preferences, or what you&apos;re craving. I&apos;ll create the perfect recipe just for you.
             </p>
 
@@ -341,7 +270,7 @@ function SearchPageContent() {
                 onSearch={handleSearch}
                 placeholder="Try: 'I have chicken and rice' or 'quick healthy dinner'"
                 isLoading={isLoading}
-                className="h-14 sm:h-16 text-base sm:text-lg shadow-2xl border-2 border-orange-200/50 bg-white/80 backdrop-blur-sm rounded-2xl"
+                className="h-14 sm:h-16 text-base sm:text-lg shadow-lg border-2 border-slate-200/50 bg-white/90 backdrop-blur-sm rounded-2xl"
               />
             </div>
 
@@ -352,18 +281,18 @@ function SearchPageContent() {
                   key={index}
                   variant="outline"
                   onClick={() => handleSearch(suggestion.text)}
-                  className="group bg-white/70 backdrop-blur-sm hover:bg-white hover:shadow-lg transition-all duration-300 rounded-lg sm:rounded-xl border-2 border-gray-200/50 hover:border-orange-300 text-xs sm:text-sm"
+                  className="group bg-white/70 backdrop-blur-sm hover:bg-white hover:shadow-md transition-all duration-300 rounded-lg sm:rounded-xl border-2 border-slate-200/50 hover:border-teal-300 text-xs sm:text-sm"
                 >
                   <span className="mr-1.5 sm:mr-2 text-base sm:text-lg">{suggestion.icon}</span>
-                  <span className="text-gray-700 font-medium hidden sm:inline">{suggestion.text}</span>
-                  <span className="text-gray-700 font-medium inline sm:hidden">{suggestion.text.split(' ').slice(0, 2).join(' ')}</span>
+                  <span className="text-slate-700 font-medium hidden sm:inline">{suggestion.text}</span>
+                  <span className="text-slate-700 font-medium inline sm:hidden">{suggestion.text.split(' ').slice(0, 2).join(' ')}</span>
                   <ArrowRight className="ml-1.5 sm:ml-2 h-3 sm:h-4 w-3 sm:w-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                 </Button>
               ))}
             </div>
 
             {/* Voice Hint */}
-            <div className="flex items-center justify-center gap-2 text-xs sm:text-sm text-gray-500">
+            <div className="flex items-center justify-center gap-2 text-xs sm:text-sm text-slate-500">
               <Mic className="h-4 w-4" />
               <span>Click the mic button or type your request</span>
             </div>
@@ -374,13 +303,13 @@ function SearchPageContent() {
         {isLoading && (
           <div className="text-center py-12 sm:py-20">
             <div className="relative inline-block">
-              <div className="w-12 sm:w-16 h-12 sm:h-16 bg-gradient-to-r from-orange-400 to-amber-400 rounded-full flex items-center justify-center mb-4 sm:mb-6">
+              <div className="w-12 sm:w-16 h-12 sm:h-16 bg-gradient-to-r from-slate-600 to-teal-600 rounded-full flex items-center justify-center mb-4 sm:mb-6">
                 <ChefHat className="h-6 sm:h-8 w-6 sm:w-8 text-white animate-bounce" />
               </div>
-              <div className="absolute -top-2 -right-2 w-5 sm:w-6 h-5 sm:h-6 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full animate-ping" />
+              <div className="absolute -top-2 -right-2 w-5 sm:w-6 h-5 sm:h-6 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full animate-ping" />
             </div>
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">Crafting Perfect Recipes</h3>
-            <p className="text-sm sm:text-base text-gray-600">Our AI chef is selecting the best recipes for you...</p>
+            <h3 className="text-lg sm:text-xl font-semibold text-slate-900 mb-2">Crafting Perfect Recipes</h3>
+            <p className="text-sm sm:text-base text-slate-600">Our AI chef is selecting the best recipes for you...</p>
           </div>
         )}
 
@@ -390,17 +319,17 @@ function SearchPageContent() {
             {/* Results Header */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8">
               <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-                <div className="w-9 sm:w-10 h-9 sm:h-10 bg-gradient-to-r from-orange-500 to-amber-500 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+                <div className="w-9 sm:w-10 h-9 sm:h-10 bg-gradient-to-r from-slate-600 to-teal-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
                   <Star className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Perfect Matches</h2>
-                  <p className="text-xs sm:text-sm text-gray-600">AI-curated recipes just for you</p>
+                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Perfect Matches</h2>
+                  <p className="text-xs sm:text-sm text-slate-600">AI-curated recipes just for you</p>
                 </div>
               </div>
               <Badge 
                 variant="secondary" 
-                className="bg-gradient-to-r from-orange-100 to-amber-100 text-orange-700 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium whitespace-nowrap"
+                className="bg-gradient-to-r from-slate-200 to-teal-100 text-slate-700 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium whitespace-nowrap"
               >
                 {recipes.length} recipes
               </Badge>
@@ -416,10 +345,10 @@ function SearchPageContent() {
                   <CardHeader className="pb-3 sm:pb-4">
                     <div className="flex items-start justify-between gap-2 mb-2 sm:mb-3">
                       <div className="flex-1 min-w-0">
-                        <CardTitle className="text-lg sm:text-xl font-bold text-gray-900 mb-1 sm:mb-2 group-hover:text-orange-600 transition-colors duration-300 line-clamp-2">
+                        <CardTitle className="text-lg sm:text-xl font-bold text-slate-900 mb-1 sm:mb-2 group-hover:text-teal-600 transition-colors duration-300 line-clamp-2">
                           {recipe.title}
                         </CardTitle>
-                        <CardDescription className="text-xs sm:text-sm text-gray-600 leading-relaxed line-clamp-2">
+                        <CardDescription className="text-xs sm:text-sm text-slate-600 leading-relaxed line-clamp-2">
                           {recipe.description}
                         </CardDescription>
                       </div>
@@ -452,44 +381,44 @@ function SearchPageContent() {
                   
                   <CardContent className="pt-0 flex-1 flex flex-col">
                     {/* Recipe Stats */}
-                    <div className="flex items-center justify-between text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6 bg-gray-50/50 rounded-lg sm:rounded-xl p-3 sm:p-4">
+                    <div className="flex items-center justify-between text-xs sm:text-sm text-slate-600 mb-4 sm:mb-6 bg-slate-50/50 rounded-lg sm:rounded-xl p-3 sm:p-4">
                       <div className="flex items-center gap-2 min-w-0">
-                        <div className="w-7 sm:w-8 h-7 sm:h-8 bg-gradient-to-r from-blue-100 to-blue-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <Clock className="h-3.5 sm:h-4 w-3.5 sm:w-4 text-blue-600" />
+                        <div className="w-7 sm:w-8 h-7 sm:h-8 bg-gradient-to-r from-teal-100 to-cyan-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Clock className="h-3.5 sm:h-4 w-3.5 sm:w-4 text-teal-600" />
                         </div>
                         <div>
-                          <div className="font-medium text-gray-900 text-xs sm:text-sm">
+                          <div className="font-medium text-slate-900 text-xs sm:text-sm">
                             {(recipe.prep_time || recipe.prepTime || 0) + (recipe.cook_time || recipe.cookTime || 0)}m
                           </div>
-                          <div className="text-xs text-gray-500">Total time</div>
+                          <div className="text-xs text-slate-500">Total time</div>
                         </div>
                       </div>
                       
                       <div className="flex items-center gap-2 min-w-0">
-                        <div className="w-7 sm:w-8 h-7 sm:h-8 bg-gradient-to-r from-green-100 to-green-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <Users className="h-3.5 sm:h-4 w-3.5 sm:w-4 text-green-600" />
+                        <div className="w-7 sm:w-8 h-7 sm:h-8 bg-gradient-to-r from-emerald-100 to-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Users className="h-3.5 sm:h-4 w-3.5 sm:w-4 text-emerald-600" />
                         </div>
                         <div>
-                          <div className="font-medium text-gray-900 text-xs sm:text-sm">{recipe.servings || 'N/A'}</div>
-                          <div className="text-xs text-gray-500">Servings</div>
+                          <div className="font-medium text-slate-900 text-xs sm:text-sm">{recipe.servings || 'N/A'}</div>
+                          <div className="text-xs text-slate-500">Servings</div>
                         </div>
                       </div>
                       
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-gradient-to-r from-purple-100 to-purple-200 rounded-lg flex items-center justify-center">
-                          <Utensils className="h-4 w-4 text-purple-600" />
+                        <div className="w-8 h-8 bg-gradient-to-r from-cyan-100 to-teal-100 rounded-lg flex items-center justify-center">
+                          <Utensils className="h-4 w-4 text-cyan-600" />
                         </div>
                         <div>
-                          <div className="font-medium text-gray-900 text-xs">{recipe.cuisine_type || 'Various'}</div>
-                          <div className="text-xs text-gray-500">Cuisine</div>
+                          <div className="font-medium text-slate-900 text-xs">{recipe.cuisine_type || 'Various'}</div>
+                          <div className="text-xs text-slate-500">Cuisine</div>
                         </div>
                       </div>
                     </div>
 
                     {/* Key Ingredients */}
                     <div className="mb-6">
-                      <p className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                        <Sparkles className="h-4 w-4 text-orange-500" />
+                      <p className="text-sm font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-teal-600" />
                         Key Ingredients
                       </p>
                       <div className="flex flex-wrap gap-2">
@@ -497,7 +426,7 @@ function SearchPageContent() {
                           <Badge 
                             key={index} 
                             variant="secondary" 
-                            className="bg-gradient-to-r from-orange-50 to-amber-50 text-orange-700 border-orange-200 text-xs font-medium px-3 py-1"
+                            className="bg-gradient-to-r from-slate-100 to-teal-50 text-slate-700 border-slate-200 text-xs font-medium px-3 py-1"
                           >
                             {typeof ingredient === 'string' ? ingredient : ingredient.name}
                           </Badge>
@@ -505,7 +434,7 @@ function SearchPageContent() {
                         {recipe.ingredients?.length > 3 && (
                           <Badge 
                             variant="secondary" 
-                            className="bg-gradient-to-r from-gray-50 to-gray-100 text-gray-600 text-xs"
+                            className="bg-gradient-to-r from-slate-50 to-slate-100 text-slate-600 text-xs"
                           >
                             +{recipe.ingredients.length - 3} more
                           </Badge>
@@ -516,7 +445,7 @@ function SearchPageContent() {
                     {/* Action Buttons */}
                     <div className="flex gap-2 sm:gap-3 mt-auto">
                       <Button 
-                        className="flex-1 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 gap-1.5 sm:gap-2 text-sm sm:text-base min-h-10 sm:min-h-11"
+                        className="flex-1 bg-gradient-to-r from-slate-600 to-teal-600 hover:from-slate-700 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 gap-1.5 sm:gap-2 text-sm sm:text-base min-h-10 sm:min-h-11"
                         onClick={() => handleStartCooking(recipe, index)}
                         disabled={savingRecipes.has(recipe.id)}
                       >
@@ -538,7 +467,7 @@ function SearchPageContent() {
                           variant="outline" 
                           onClick={() => handleSaveRecipe(recipe)}
                           disabled={savingRecipes.has(recipe.id)}
-                          className="gap-1.5 sm:gap-2 border-2 hover:bg-orange-50 hover:border-orange-300 transition-all duration-300 min-h-10 sm:min-h-11"
+                          className="gap-1.5 sm:gap-2 border-2 hover:bg-teal-50 hover:border-teal-300 transition-all duration-300 min-h-10 sm:min-h-11"
                           title="Save recipe"
                         >
                           {savingRecipes.has(recipe.id) ? (
@@ -555,10 +484,10 @@ function SearchPageContent() {
                           <Button
                             variant="outline" 
                             disabled
-                            className="gap-1.5 sm:gap-2 border-green-200 bg-green-50 min-h-10 sm:min-h-11"
+                            className="gap-1.5 sm:gap-2 border-teal-200 bg-teal-50 min-h-10 sm:min-h-11"
                             title="Recipe saved"
                           >
-                            <BookmarkCheck className="h-4 w-4 text-green-600" />
+                            <BookmarkCheck className="h-4 w-4 text-teal-600" />
                           </Button>
                           
                           {/* Add to Collection Button - only show for saved recipes */}
@@ -572,49 +501,6 @@ function SearchPageContent() {
                 </Card>
               ))}
             </div>
-
-            {/* Web Search Toggle */}
-            <div className="mt-8 sm:mt-12 flex items-center gap-4">
-              <Separator className="flex-1" />
-              <Button
-                onClick={() => setShowWebSearch(!showWebSearch)}
-                variant="outline"
-                className="gap-2"
-              >
-                <Globe className="w-4 h-4" />
-                {showWebSearch ? 'Hide Web Recipes' : 'Search the Web'}
-              </Button>
-              <Separator className="flex-1" />
-            </div>
-          </div>
-        )}
-
-        {/* Web Search Results */}
-        {showWebSearch && searchQuery && (
-          <div className="mb-12 mt-8">
-            <WebSearchCarousel 
-              recipes={webRecipes} 
-              isLoading={isWebSearching}
-              onViewRecipe={handleViewExternalRecipe}
-              onRecipeClick={(recipe) => {
-                // Handle clicking a web recipe - open in new tab or show details
-                if (recipe.sourceUrl) {
-                  window.open(recipe.sourceUrl, '_blank', 'noopener,noreferrer');
-                }
-              }}
-            />
-          </div>
-        )}
-
-        {/* Saved External Recipes Section */}
-        {user && (
-          <div className="mb-12 mt-8">
-            <SavedExternalRecipesSection
-              recipes={savedRecipes}
-              isLoading={isSavedRecipesLoading}
-              onViewRecipe={handleViewExternalRecipe}
-              onRemoveFavorite={handleRemoveSavedRecipe}
-            />
           </div>
         )}
 
@@ -622,47 +508,33 @@ function SearchPageContent() {
         {recipes.length === 0 && !isLoading && (
           <div className="text-center py-20">
             <div className="relative inline-block mb-8">
-              <div className="w-24 h-24 bg-gradient-to-r from-orange-100 to-amber-100 rounded-full flex items-center justify-center">
-                <Search className="h-12 w-12 text-orange-600" />
+              <div className="w-24 h-24 bg-gradient-to-r from-slate-200 to-teal-100 rounded-full flex items-center justify-center">
+                <Search className="h-12 w-12 text-slate-600" />
               </div>
-              <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full flex items-center justify-center">
+              <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full flex items-center justify-center">
                 <Sparkles className="h-4 w-4 text-white" />
               </div>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">Ready to Discover Amazing Recipes?</h3>
-            <p className="text-lg text-gray-600 mb-8 max-w-md mx-auto">
+            <h3 className="text-2xl font-bold text-slate-900 mb-4">Ready to Discover Amazing Recipes?</h3>
+            <p className="text-lg text-slate-600 mb-8 max-w-md mx-auto">
               Use the search above, try voice input, or click one of the suggestion chips to get started
             </p>
-            <div className="flex items-center justify-center gap-6 text-sm text-gray-500">
+            <div className="flex items-center justify-center gap-6 text-sm text-slate-500">
               <div className="flex items-center gap-2">
-                <Mic className="h-5 w-5 text-orange-500" />
+                <Mic className="h-5 w-5 text-teal-600" />
                 <span>Voice Search</span>
               </div>
               <div className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-blue-500" />
+                <Zap className="h-5 w-5 text-cyan-600" />
                 <span>AI-Powered</span>
               </div>
               <div className="flex items-center gap-2">
-                <Heart className="h-5 w-5 text-red-500" />
+                <Heart className="h-5 w-5 text-slate-600" />
                 <span>Personalized</span>
               </div>
             </div>
           </div>
         )}
-        
-        {/* External Recipe Modal */}
-        <ExternalRecipeModal
-          recipe={selectedExternalRecipe}
-          isOpen={showExternalRecipeModal}
-          onClose={() => {
-            setShowExternalRecipeModal(false);
-            setSelectedExternalRecipe(null);
-          }}
-          onFavoriteChange={() => {
-            // Refetch saved recipes when a favorite is added/removed
-            refetchSavedRecipes();
-          }}
-        />
       </main>
     </div>
   )

@@ -52,24 +52,24 @@ export default function Navigation() {
 
   return (
     <>
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-shadow duration-300 ${
         isScrolled
-          ? 'bg-white/95 backdrop-blur-md border-b border-gray-200/50 shadow-lg'
-          : 'bg-white border-b border-gray-100'
-      }`}>
+          ? 'bg-gradient-to-r from-orange-500 to-orange-600 border-b border-orange-400/50 shadow-lg'
+          : 'bg-gradient-to-r from-orange-500 to-orange-600 border-b border-orange-400 shadow-sm'
+      }`} style={{ transform: 'translateZ(0)', WebkitFontSmoothing: 'antialiased', backfaceVisibility: 'hidden' }}>
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-16" style={{ WebkitFontSmoothing: 'antialiased' }}>
 
             {/* Logo */}
             <Link
               href="/"
-              className="flex items-center gap-2 text-base sm:text-xl font-bold text-orange-600 hover:text-orange-700 transition-colors group min-h-10 min-w-10"
+              className="flex items-center gap-2 text-base sm:text-xl font-bold text-white hover:text-white/80 transition-colors group min-h-10 min-w-10"
             >
               <div className="relative">
                 <ChefHat className="h-6 sm:h-7 w-6 sm:w-7 group-hover:scale-110 transition-transform duration-200" />
-                <Sparkles className="h-2.5 sm:h-3 w-2.5 sm:w-3 absolute -top-1 -right-1 text-orange-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                <Sparkles className="h-2.5 sm:h-3 w-2.5 sm:w-3 absolute -top-1 -right-1 text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
               </div>
-              <span className="bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent hidden sm:inline">
+              <span className="text-white hidden sm:inline font-bold drop-shadow-sm">
                 CookAI
               </span>
             </Link>
@@ -86,8 +86,8 @@ export default function Navigation() {
                       size="sm"
                       className={`relative group transition-all duration-200 min-h-10 font-semibold ${
                         active
-                          ? 'bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-lg'
-                          : 'text-gray-700 hover:bg-orange-100 hover:text-orange-700'
+                          ? 'bg-white/25 hover:bg-white/35 text-white shadow-lg'
+                          : 'text-white/90 hover:bg-white/20 hover:text-white'
                       }`}
                     >
                       <Icon className="h-4 w-4 mr-2" />
@@ -105,7 +105,7 @@ export default function Navigation() {
             <div className="flex items-center gap-2 sm:gap-3">
               {user ? (
                 <div className="hidden sm:flex items-center gap-3">
-                  <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600 bg-gray-50 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full">
+                  <div className="flex items-center gap-2 text-xs sm:text-sm text-white/90 bg-white/20 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full">
                     <User className="h-4 w-4 flex-shrink-0" />
                     <span className="font-medium truncate max-w-[100px]">
                       {user.firstName || user.username || user.primaryEmailAddress?.emailAddress?.split('@')[0]}
@@ -114,7 +114,7 @@ export default function Navigation() {
                   <UserButton
                     appearance={{
                       elements: {
-                        avatarBox: "h-9 w-9 ring-2 ring-orange-100 hover:ring-orange-200 transition-all duration-200"
+                        avatarBox: "h-9 w-9 ring-2 ring-orange-300 hover:ring-orange-200 transition-all duration-200"
                       }
                     }}
                   />
@@ -123,7 +123,7 @@ export default function Navigation() {
                 <SignInButton mode="modal">
                   <Button
                     size="sm"
-                    className="flex bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-md hover:shadow-lg transition-all duration-200 min-h-10 font-semibold text-xs sm:text-sm px-2 sm:px-4"
+                    className="flex bg-white text-orange-600 hover:bg-gray-100 shadow-md hover:shadow-lg transition-all duration-200 min-h-10 font-semibold text-xs sm:text-sm px-2 sm:px-4"
                   >
                     <span className="hidden sm:inline">Sign In / Sign Up</span>
                     <span className="sm:hidden">Sign In</span>
@@ -136,7 +136,7 @@ export default function Navigation() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="md:hidden p-2 hover:bg-orange-50 min-h-10 min-w-10"
+                  className="md:hidden p-2 hover:bg-white/20 text-white min-h-10 min-w-10"
                   onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                   aria-label="Toggle menu"
                 >
@@ -153,7 +153,7 @@ export default function Navigation() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="md:hidden p-2 hover:bg-orange-50 min-h-10 min-w-10"
+                  className="md:hidden p-2 hover:bg-slate-100 min-h-10 min-w-10"
                   onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                   aria-label="Toggle menu"
                 >
@@ -172,7 +172,7 @@ export default function Navigation() {
         <div className={`md:hidden transition-all duration-300 overflow-hidden ${
           isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
         }`}>
-          <div className="bg-white border-t border-gray-100 px-4 py-3 space-y-2">
+          <div className="bg-white border-t border-slate-100 px-4 py-3 space-y-2">
             {navigationItems.map((item) => {
               const Icon = item.icon
               const active = isActive(item.href)
@@ -182,8 +182,8 @@ export default function Navigation() {
                     variant={active ? "default" : "ghost"}
                     className={`w-full justify-start transition-all duration-200 min-h-12 font-semibold ${
                       active
-                        ? 'bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-md'
-                        : 'text-gray-700 hover:bg-orange-100 hover:text-orange-700'
+                        ? 'bg-gradient-to-r from-slate-600 to-teal-600 hover:from-slate-700 hover:to-teal-700 text-white shadow-md'
+                        : 'text-slate-700 hover:bg-slate-100 hover:text-teal-600'
                     }`}
                   >
                     <Icon className="h-5 w-5 mr-3 flex-shrink-0" />
@@ -194,10 +194,10 @@ export default function Navigation() {
             })}
 
             {/* Mobile User Actions */}
-            <div className="pt-2 border-t border-gray-100">
+            <div className="pt-2 border-t border-slate-100">
               {user ? (
                 <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 text-sm text-gray-600 min-h-12">
+                  <div className="flex items-center gap-2 text-sm text-slate-600 min-h-12">
                     <User className="h-5 w-5 flex-shrink-0" />
                     <span className="font-medium truncate max-w-[100px]">
                       {user.firstName || user.username || user.primaryEmailAddress?.emailAddress?.split('@')[0]}
@@ -213,7 +213,7 @@ export default function Navigation() {
                 </div>
               ) : (
                 <SignInButton mode="modal">
-                  <Button className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-md min-h-12 font-semibold">
+                  <Button className="w-full bg-gradient-to-r from-slate-600 to-teal-600 hover:from-slate-700 hover:to-teal-700 text-white shadow-md min-h-12 font-semibold">
                     Sign In / Sign Up
                   </Button>
                 </SignInButton>

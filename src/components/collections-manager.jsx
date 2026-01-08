@@ -76,12 +76,12 @@ export function CollectionsManager({ onCollectionSelect }) {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mt-8 sm:mt-0">
         <h2 className="text-2xl font-bold">My Collections</h2>
         <Button
           onClick={() => setIsCreating(true)}
           size="sm"
-          className="bg-orange-500 hover:bg-orange-600"
+          className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600"
         >
           <Plus className="h-4 w-4 mr-2" />
           New Collection

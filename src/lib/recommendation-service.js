@@ -22,103 +22,6 @@ export class RecommendationService {
   
   /**
    * ==================================
-   * "WHAT'S FOR DINNER?" RECOMMENDATION
-   * ==================================
-   * Smart recommendation based on time, preferences, and context
-   */
-  static async getWhatsForDinner(userId, context = {}) {
-    try {
-      const {
-        timeAvailable = 60, // minutes
-        mealType = 'dinner',
-        servings = 2,
-      } = context;
-
-      // 1. Get user preferences
-      const userPrefs = await this.getUserPreferences(userId);
-      
-      // 2. Check cache first
-      const cached = await this.getCachedRecommendation(
-        userId,
-        'whats_for_dinner',
-        { timeAvailable, mealType }
-      );
-      
-      if (cached) {
-        return this.enrichRecipesWithScores(cached.recipe_ids);
-      }
-
-      // 3. Get user's recent cooking history (last 30 days)
-      const { data: recentRecipes } = await supabase
-        .from('recipe_interactions')
-        .select('recipe_id')
-        .eq('user_id', userId)
-        .eq('interaction_type', 'cook')
-        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
-        .limit(20);
-
-      const recentRecipeIds = recentRecipes?.map(r => r.recipe_id) || [];
-
-      // 4. Build smart query
-      let query = supabase
-        .from('recipes')
-        .select(`
-          id, title, description, cuisine_type, difficulty,
-          prep_time, cook_time, servings, ingredients, dietary_tags,
-          recipe_scores!inner(popularity_score, quality_score, cook_count)
-        `)
-        .lte('prep_time', Math.floor(timeAvailable * 0.4)) // 40% of time for prep
-        .lte('cook_time', Math.floor(timeAvailable * 0.6)); // 60% of time for cooking
-
-      // Filter by dietary restrictions
-      if (userPrefs?.dietary_restrictions?.length > 0) {
-        query = query.contains('dietary_tags', userPrefs.dietary_restrictions);
-      }
-
-      // Filter by preferred difficulty
-      if (userPrefs?.preferred_difficulty) {
-        query = query.eq('difficulty', userPrefs.preferred_difficulty);
-      }
-
-      // Exclude recently cooked recipes (variety)
-      if (recentRecipeIds.length > 0) {
-        query = query.not('id', 'in', `(${recentRecipeIds.join(',')})`);
-      }
-
-      // Order by quality and popularity
-      query = query
-        .order('quality_score', { foreignTable: 'recipe_scores', ascending: false })
-        .order('popularity_score', { foreignTable: 'recipe_scores', ascending: false })
-        .limit(20);
-
-      const { data: candidates, error } = await query;
-
-      if (error) throw error;
-
-      // 5. Apply ML-style scoring algorithm
-      const scoredRecipes = this.scoreRecipesForUser(candidates, userPrefs, context);
-      
-      // 6. Get top 3 recommendations with different reasons
-      const recommendations = this.selectDiverseRecommendations(scoredRecipes, 3);
-
-      // 7. Cache recommendations (expires in 1 hour)
-      await this.cacheRecommendation(
-        userId,
-        'whats_for_dinner',
-        recommendations.map(r => r.id),
-        { timeAvailable, mealType },
-        60 * 60 // 1 hour
-      );
-
-      return recommendations;
-    } catch (error) {
-      console.error('Error getting dinner recommendation:', error);
-      return await this.getFallbackRecommendations(userId, 3);
-    }
-  }
-
-  /**
-   * ==================================
    * SIMILAR RECIPES
    * ==================================
    * Find recipes similar to a given recipe
@@ -202,33 +105,6 @@ export class RecommendationService {
 
     } catch (error) {
       console.error('Error finding similar recipes:', error);
-      return [];
-    }
-  }
-
-  /**
-   * ==================================
-   * TRENDING RECIPES
-   * ==================================
-   * Get currently trending recipes
-   */
-  static async getTrendingRecipes(limit = 12) {
-    try {
-      const { data, error } = await supabase
-        .from('recipes')
-        .select(`
-          id, title, description, cuisine_type, difficulty,
-          prep_time, cook_time, servings, ingredients, dietary_tags,
-          recipe_scores!inner(trending_score, view_count, cook_count)
-        `)
-        .order('trending_score', { foreignTable: 'recipe_scores', ascending: false })
-        .order('view_count', { foreignTable: 'recipe_scores', ascending: false })
-        .limit(limit);
-
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching trending recipes:', error);
       return [];
     }
   }
@@ -450,8 +326,8 @@ export class RecommendationService {
     }
   }
 
-  // Score recipes for specific user
-  static scoreRecipesForUser(recipes, userPrefs, context) {
+  // Score recipes for specific user - with meal type awareness
+  static scoreRecipesForUser(recipes, userPrefs, context, mealType = 'dinner') {
     return recipes.map(recipe => {
       let score = 0;
       let reasons = [];
@@ -459,6 +335,74 @@ export class RecommendationService {
       // Base score from database
       score += (recipe.recipe_scores?.popularity_score || 0) * 10;
       score += (recipe.recipe_scores?.quality_score || 0) * 10;
+
+      // HEALTH SCORING FOR DINNER
+      if (mealType === 'dinner') {
+        const dietaryTags = recipe.dietary_tags || [];
+        
+        // Boost healthy options
+        const healthyTags = ['healthy', 'low-fat', 'low-calorie', 'vegetarian', 'vegan', 'light'];
+        const healthyMatches = healthyTags.filter(tag => 
+          dietaryTags.includes(tag) || dietaryTags.some(t => t.toLowerCase().includes(tag))
+        );
+        
+        if (healthyMatches.length > 0) {
+          score += 25; // Significant boost for healthy options
+          reasons.push(`Healthy dinner choice: ${healthyMatches[0]}`);
+        }
+        
+        // Reduce score for heavy/fried foods
+        const unhealthyTags = ['fried', 'deep-fried', 'heavy', 'high-fat'];
+        const unhealthyMatches = unhealthyTags.filter(tag => 
+          dietaryTags.includes(tag) || dietaryTags.some(t => t.toLowerCase().includes(tag))
+        );
+        
+        if (unhealthyMatches.length > 0) {
+          score -= 15; // Penalty for unhealthy options at dinner
+        }
+        
+        // Prefer lighter meals (under 600 calories is ideal for dinner)
+        if (recipe.nutrition?.calories) {
+          if (recipe.nutrition.calories < 400) {
+            score += 15;
+            reasons.push('Very light - perfect for dinner');
+          } else if (recipe.nutrition.calories < 600) {
+            score += 10;
+            reasons.push('Light meal - good for dinner');
+          } else if (recipe.nutrition.calories > 900) {
+            score -= 10;
+            reasons.push('Heavy meal - not ideal for dinner');
+          }
+        }
+        
+        // Prefer vegetables and proteins at dinner
+        const ingredients = recipe.ingredients || [];
+        const hasVeggies = ingredients.some(ing => 
+          typeof ing === 'string' 
+            ? ing.toLowerCase().match(/vegetable|veggie|broccoli|carrot|spinach|kale|pepper|tomato|bean|lentil/)
+            : ing.name?.toLowerCase?.().match(/vegetable|veggie|broccoli|carrot|spinach|kale|pepper|tomato|bean|lentil/)
+        );
+        
+        const hasProtein = ingredients.some(ing =>
+          typeof ing === 'string'
+            ? ing.toLowerCase().match(/chicken|fish|salmon|tofu|turkey|lean|egg|protein/)
+            : ing.name?.toLowerCase?.().match(/chicken|fish|salmon|tofu|turkey|lean|egg|protein/)
+        );
+        
+        if (hasVeggies) {
+          score += 8;
+          if (!reasons.some(r => r.includes('Vegetable'))) {
+            reasons.push('Includes vegetables');
+          }
+        }
+        
+        if (hasProtein) {
+          score += 8;
+          if (!reasons.some(r => r.includes('Protein'))) {
+            reasons.push('Good protein source');
+          }
+        }
+      }
 
       // Cuisine match
       if (userPrefs?.favorite_cuisines?.includes(recipe.cuisine_type)) {
@@ -632,7 +576,7 @@ export class RecommendationService {
         .select(`
           id, title, description, cuisine_type, difficulty,
           prep_time, cook_time, servings, ingredients, dietary_tags,
-          recipe_scores(popularity_score, cook_count)
+          nutrition, recipe_scores(popularity_score, cook_count)
         `)
         .order('popularity_score', { foreignTable: 'recipe_scores', ascending: false })
         .limit(limit);
@@ -640,6 +584,75 @@ export class RecommendationService {
       return data || [];
     } catch (error) {
       console.error('Error getting fallback recommendations:', error);
+      return [];
+    }
+  }
+
+  // Get healthy fallback recommendations for dinner
+  static async getHealthyFallbackRecommendations(userId, limit) {
+    try {
+      const { data: allRecipes } = await supabase
+        .from('recipes')
+        .select(`
+          id, title, description, cuisine_type, difficulty,
+          prep_time, cook_time, servings, ingredients, dietary_tags,
+          nutrition, recipe_scores(popularity_score, cook_count)
+        `)
+        .lte('prep_time', 30)
+        .lte('cook_time', 45)
+        .limit(100);
+
+      if (!allRecipes) return [];
+
+      // Filter for healthy recipes - STRICT FILTERING
+      const healthyRecipes = allRecipes.filter(recipe => {
+        const title = recipe.title?.toLowerCase() || '';
+        const tags = recipe.dietary_tags || [];
+        const tagsStr = JSON.stringify(tags).toLowerCase();
+        const description = (recipe.description || '').toLowerCase();
+        
+        // ❌ EXCLUDE unhealthy - STRICT LIST
+        const unhealthyKeywords = [
+          'fried', 'deep-fried', 'heavy', 'dessert', 'cake', 'cream sauce', 'buttery',
+          'high-fat', 'burger', 'fries', 'french fries', 'pizza', 'cheese pizza',
+          'pastry', 'donut', 'chocolate', 'candy', 'cookies', 'brownies', 'ice cream',
+          'creamy pasta', 'alfredo', 'carbonara', 'mac and cheese', 'deep fry', 'pasta'
+        ];
+        
+        const isUnhealthy = unhealthyKeywords.some(keyword => 
+          tagsStr.includes(keyword) || title.includes(keyword) || description.includes(keyword)
+        );
+        
+        if (isUnhealthy) return false;
+        
+        // Check ingredients
+        const ingredients = (recipe.ingredients || []).map(i => 
+          typeof i === 'string' ? i.toLowerCase() : (i.name || '').toLowerCase()
+        ).join(' ');
+        
+        const hasVeggies = /vegetable|veggie|broccoli|carrot|spinach|kale|pepper|tomato|bean|lentil|salad|greens|lettuce|cucumber|zucchini|mushroom|asparagus|pea|cauliflower|onion|garlic|squash/.test(ingredients);
+        const hasProtein = /chicken|fish|salmon|tuna|tofu|turkey|lean|egg|protein|legume|bean|lentil|meat|beef|pork|shrimp|crab|scallop/.test(ingredients);
+        
+        // ✅ REQUIREMENT: Must have healthy tag OR (veggies AND protein)
+        const hasHealthyTag = ['healthy', 'light', 'low-fat', 'low-calorie', 'low-sodium', 'vegetarian', 'vegan', 'lean', 'grilled', 'baked', 'steamed', 'boiled', 'roasted'].some(
+          tag => tagsStr.includes(tag) || title.includes(tag)
+        );
+        
+        const calories = recipe.nutrition?.calories;
+        
+        // Reject if calories too high
+        if (calories && calories > 800) return false;
+        
+        // Final check: must be healthy
+        return hasHealthyTag || (hasVeggies && hasProtein);
+      });
+
+      // Return top healthy recipes by popularity
+      return healthyRecipes
+        .sort((a, b) => (b.recipe_scores?.popularity_score || 0) - (a.recipe_scores?.popularity_score || 0))
+        .slice(0, limit);
+    } catch (error) {
+      console.error('Error getting healthy fallback recommendations:', error);
       return [];
     }
   }
@@ -705,245 +718,6 @@ export class RecommendationService {
     } catch (error) {
       console.error('Error getting complementary recipe:', error);
       return [];
-    }
-  }
-
-  /**
-   * ==========================================
-   * HYBRID RECOMMENDATION METHODS (NEW)
-   * ==========================================
-   * Blend internal and external recipes
-   */
-
-  /**
-   * Get hybrid trending recipes (internal + web)
-   */
-  static async getHybridTrendingRecipes(limit = 12, options = {}) {
-    try {
-      const { internal_ratio = 60, external_ratio = 40 } = options;
-
-      // Get internal trending
-      const internalTrending = await this.getTrendingRecipes(
-        Math.ceil((limit * internal_ratio) / 100)
-      );
-
-      // Get external trending from FireCrawl (via API)
-      const externalTrending = await this.getWebRecipesByCategory('trending recipes', {
-        limit: Math.ceil((limit * external_ratio) / 100),
-      });
-
-      // Blend and return
-      return this.blendRecipesForDisplay(
-        internalTrending,
-        externalTrending,
-        { internal_ratio, external_ratio }
-      );
-
-    } catch (error) {
-      console.error('Error getting hybrid trending recipes:', error);
-      // Fallback to internal only
-      return this.getTrendingRecipes(limit);
-    }
-  }
-
-  /**
-   * Get hybrid popular recipes (internal + web)
-   */
-  static async getHybridPopularRecipes(limit = 12, options = {}) {
-    try {
-      const { internal_ratio = 60, external_ratio = 40 } = options;
-
-      // Get internal popular
-      const internalPopular = await this.getPopularRecipes(
-        Math.ceil((limit * internal_ratio) / 100)
-      );
-
-      // Get external popular
-      const externalPopular = await this.getWebRecipesByCategory('popular recipes', {
-        limit: Math.ceil((limit * external_ratio) / 100),
-      });
-
-      // Blend and return
-      return this.blendRecipesForDisplay(
-        internalPopular,
-        externalPopular,
-        { internal_ratio, external_ratio }
-      );
-
-    } catch (error) {
-      console.error('Error getting hybrid popular recipes:', error);
-      return this.getPopularRecipes(limit);
-    }
-  }
-
-  /**
-   * Get web recipes by category
-   */
-  static async getWebRecipesByCategory(category, options = {}) {
-    try {
-      const { limit = 6 } = options;
-
-      // Query external_recipes table
-      let query = supabase
-        .from('external_recipes')
-        .select('*')
-        .eq('is_verified', true)
-        .gt('expires_at', new Date().toISOString())
-        .order('rating', { ascending: false })
-        .limit(limit);
-
-      // Add category-based filters
-      if (category.includes('trending')) {
-        query = query.order('last_scraped_at', { ascending: false });
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-
-      return (data || []).map(recipe => ({
-        id: recipe.id,
-        title: recipe.title,
-        description: recipe.description,
-        cuisine_type: recipe.cuisine_type,
-        difficulty: recipe.difficulty,
-        prep_time: recipe.prep_time,
-        cook_time: recipe.cook_time,
-        servings: recipe.servings,
-        ingredients: recipe.ingredients,
-        dietary_tags: recipe.dietary_tags,
-        source_url: recipe.source_url,
-        source_domain: recipe.source_domain,
-        image: recipe.image_url,
-        isExternal: true,
-      }));
-
-    } catch (error) {
-      console.error('Error getting web recipes by category:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Blend internal and external recipes for display
-   */
-  static blendRecipesForDisplay(internal = [], external = [], ratio = {}) {
-    try {
-      const { internal_ratio = 60, external_ratio = 40 } = ratio;
-      const blended = [];
-
-      // Calculate positions
-      const totalSlots = Math.max(internal.length, external.length);
-      let inIdx = 0;
-      let exIdx = 0;
-
-      // Interleave: mostly internal with external sprinkled in
-      for (let i = 0; i < totalSlots * 2; i++) {
-        if (blended.length >= 12) break;
-
-        // Calculate if we should add internal or external
-        const progress = i / (totalSlots * 2);
-        const shouldBeInternal = Math.random() < (internal_ratio / 100);
-
-        if (shouldBeInternal && inIdx < internal.length) {
-          blended.push({
-            ...internal[inIdx],
-            source: 'internal',
-            isExternal: false,
-          });
-          inIdx++;
-        } else if (exIdx < external.length) {
-          blended.push({
-            ...external[exIdx],
-            source: 'external',
-            isExternal: true,
-          });
-          exIdx++;
-        } else if (inIdx < internal.length) {
-          blended.push({
-            ...internal[inIdx],
-            source: 'internal',
-            isExternal: false,
-          });
-          inIdx++;
-        }
-      }
-
-      return blended.slice(0, 12);
-
-    } catch (error) {
-      console.error('Error blending recipes:', error);
-      return internal;
-    }
-  }
-
-  /**
-   * Cache hybrid recommendations
-   */
-  static async cacheHybridRecommendations(
-    userId,
-    recommendationType,
-    internalIds = [],
-    externalIds = [],
-    ratio = {}
-  ) {
-    try {
-      const { error } = await supabase
-        .from('hybrid_recommendation_cache')
-        .insert({
-          user_id: userId,
-          recommendation_type: recommendationType,
-          internal_recipe_ids: internalIds,
-          external_recipe_ids: externalIds,
-          blend_ratio: ratio,
-          expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hour
-        });
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error caching hybrid recommendations:', error);
-    }
-  }
-
-  /**
-   * Get cached hybrid recommendations
-   */
-  static async getCachedHybridRecommendations(userId, recommendationType) {
-    try {
-      const { data, error } = await supabase
-        .from('hybrid_recommendation_cache')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('recommendation_type', recommendationType)
-        .gt('expires_at', new Date().toISOString())
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (error && error.code !== 'PGRST116') throw error; // Ignore "no rows" error
-      return data;
-
-    } catch (error) {
-      console.error('Error getting cached hybrid recommendations:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Track external recipe interaction
-   */
-  static async trackExternalRecipeInteraction(userId, externalRecipeId, interactionType) {
-    try {
-      const { error } = await supabase
-        .from('external_recipe_interactions')
-        .insert({
-          user_id: userId,
-          external_recipe_id: externalRecipeId,
-          interaction_type: interactionType,
-        });
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error tracking external recipe interaction:', error);
     }
   }
 

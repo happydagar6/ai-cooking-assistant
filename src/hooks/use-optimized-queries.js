@@ -226,6 +226,7 @@ export function useFavoriteMutation(userId) {
     // On success, invalidate related queries to refetch fresh data
     onSuccess: (data, recipeId) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.favorites(userId) })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.userRecipes(userId) })
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.analyticsOverview(userId) })
     },
 

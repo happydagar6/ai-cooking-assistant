@@ -9,11 +9,6 @@ import { useAuth } from "@/lib/auth-context";
 import { CollectionsManager } from "@/components/collections-manager";
 import { CollectionDetail } from "@/components/collection-detail";
 import { AddToCollectionButton } from "@/components/add-to-collection-button";
-import { WhatsForDinnerWidget } from "@/components/whats-for-dinner";
-import { TrendingRecipesCarousel, PopularRecipesCarousel } from "@/components/trending-popular-carousel";
-import { HybridTrendingCarousel } from "@/components/hybrid-trending-carousel";
-import { HybridPopularCarousel } from "@/components/hybrid-popular-carousel";
-import { useHybridMode } from "@/hooks/use-hybrid-recommendations";
 
 // ⚡ Lazy load analytics dashboard - only load when analytics tab is visible
 const AnalyticsDashboard = dynamic(
@@ -23,8 +18,8 @@ const AnalyticsDashboard = dynamic(
   { 
     loading: () => (
       <div className="animate-pulse space-y-4">
-        <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-        <div className="h-64 bg-gray-200 rounded"></div>
+        <div className="h-8 bg-slate-200 rounded w-1/4"></div>
+        <div className="h-64 bg-slate-200 rounded"></div>
       </div>
     ),
     ssr: false
@@ -36,7 +31,7 @@ const CookingAchievements = dynamic(
     default: mod.CookingAchievements 
   })),
   { 
-    loading: () => <div className="h-48 bg-gray-200 rounded animate-pulse"></div>,
+    loading: () => <div className="h-48 bg-slate-200 rounded animate-pulse"></div>,
     ssr: false
   }
 )
@@ -116,8 +111,6 @@ function DashboardContent() {
   const deleteRecipeMutation = useDeleteRecipeMutation(userId);
 
   // 🌐 HYBRID MODE: Toggle between local and hybrid recommendations
-  const { enabled: hybridModeEnabled, toggle: toggleHybridMode } = useHybridMode(true);
-
   // UI state for filters and dialogs
   const [deletingRecipes, setDeletingRecipes] = useState(new Set());
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -370,13 +363,13 @@ function DashboardContent() {
   const getDifficultyColor = (difficulty) => {
     switch (difficulty) {
       case "easy":
-        return "bg-green-100 text-green-800 border-green-200";
+        return "bg-emerald-100 text-emerald-700 border-emerald-200";
       case "medium":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+        return "bg-cyan-100 text-cyan-700 border-cyan-200";
       case "hard":
-        return "bg-red-100 text-red-800 border-red-200";
+        return "bg-slate-200 text-slate-700 border-slate-300";
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return "bg-slate-100 text-slate-700 border-slate-200";
     }
   };
 
@@ -399,7 +392,7 @@ function DashboardContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
           <p className="text-muted-foreground">Loading your saved recipes...</p>
@@ -417,7 +410,7 @@ function DashboardContent() {
         pullDistance={pullDistance}
       />
       <div 
-        className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50 gesture-container flex flex-col"
+        className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 gesture-container flex flex-col"
         {...gestureHandlers}
         style={{
           paddingTop: isPulling ? Math.min(pullDistance, 80) : 0,
@@ -583,7 +576,7 @@ function DashboardContent() {
         </div>
 
         <div className="text-center mb-6 sm:mb-8 px-4">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-5 bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-5 bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
             My Recipe Collection
           </h1>
           <p className="text-sm sm:text-base lg:text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -643,7 +636,7 @@ function DashboardContent() {
         )}
 
         {/* Collections Section */}
-        <section className="mb-8">
+        <section className="mb-8 mt-12 sm:mt-8">
           {selectedCollection ? (
             <CollectionDetail
               collectionId={selectedCollection.id}
@@ -653,48 +646,6 @@ function DashboardContent() {
             <CollectionsManager
               onCollectionSelect={setSelectedCollection}
             />
-          )}
-        </section>
-
-        {/* Smart Recommendations Section */}
-        <section className="mb-8 space-y-6">
-          {/* What's for Dinner Widget */}
-          <WhatsForDinnerWidget className="px-4" />
-          
-          {/* Hybrid Mode Toggle */}
-          <div className="px-4 flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
-            <div>
-              <p className="font-semibold text-sm text-blue-900 dark:text-blue-100">
-                {hybridModeEnabled ? '🌐 Hybrid Mode On' : '📚 Local Recipes Only'}
-              </p>
-              <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-                {hybridModeEnabled 
-                  ? 'Showing recipes from your library + web searches' 
-                  : 'Showing recipes from your library only'}
-              </p>
-            </div>
-            <Button
-              size="sm"
-              variant={hybridModeEnabled ? 'default' : 'outline'}
-              onClick={() => toggleHybridMode(!hybridModeEnabled)}
-              className="whitespace-nowrap"
-            >
-              {hybridModeEnabled ? 'Disable' : 'Enable'} Hybrid
-            </Button>
-          </div>
-          
-          {/* Trending Recipes */}
-          {hybridModeEnabled ? (
-            <HybridTrendingCarousel limit={12} includeWeb={true} />
-          ) : (
-            <TrendingRecipesCarousel className="px-4" />
-          )}
-          
-          {/* Popular Recipes */}
-          {hybridModeEnabled ? (
-            <HybridPopularCarousel limit={12} includeWeb={true} />
-          ) : (
-            <PopularRecipesCarousel className="px-4" />
           )}
         </section>
 
@@ -771,6 +722,10 @@ function DashboardContent() {
                             recipeId={recipe.id} 
                             size="sm"
                             className="ml-1"
+                            onToggle={(isFavorite) => {
+                              // Refetch recipes to update the favorite status in the UI
+                              refetchRecipes();
+                            }}
                           />
                         </div>
                       </div>
@@ -836,7 +791,7 @@ function DashboardContent() {
                           size="sm"
                           onClick={() => handleDeleteClick(recipe)}
                           disabled={deletingRecipes.has(recipe.id)}
-                          className="gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="gap-1 text-slate-600 hover:text-slate-700 hover:bg-slate-100"
                         >
                           {deletingRecipes.has(recipe.id) ? (
                             <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />

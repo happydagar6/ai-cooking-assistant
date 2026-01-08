@@ -1,6 +1,8 @@
 import { OpenAIService } from "./openai";
 import { supabase } from "./supabase";
 import { createClient } from '@supabase/supabase-js';
+import { ImageOptimizationService } from "./image-optimization-service";
+import { ImageStorageService } from "./image-storage-service";
 
 export class RecipeService {
   static async generateRecipes(query, userId = null) {
@@ -96,6 +98,7 @@ export class RecipeService {
   }
 
   // Save recipe with authenticated Supabase client (for RLS policies)
+  // Enhanced with image optimization and async handling
   static async saveRecipeWithAuth(recipeData, userId, authenticatedSupabase) {
     try {
       if (!userId) {
@@ -106,8 +109,7 @@ export class RecipeService {
         throw new Error("Authenticated Supabase client is required");
       }
 
-      // Let the database handle duplicates with unique constraints
-      // No need for explicit checking - the constraint will prevent duplicates
+      console.log('[RecipeService] Saving recipe:', recipeData.title);
 
       // Filter out any fields that might not exist in the database
       const validRecipeData = {
@@ -121,6 +123,10 @@ export class RecipeService {
         cuisine_type: recipeData.cuisine_type || 'Various',
         dietary_tags: recipeData.dietary_tags || [],
         image_url: recipeData.image_url || null,
+        image_storage_path: null, // Will be populated by async optimization
+        image_width: null,
+        image_height: null,
+        image_blurhash: null,
         ingredients: recipeData.ingredients || [],
         instructions: recipeData.instructions || [],
         nutrition: recipeData.nutrition || null,
@@ -138,9 +144,11 @@ export class RecipeService {
         .single();
 
       if (recipeError) {
-        console.error('Supabase insert error:', recipeError);
+        console.error('[RecipeService] Supabase insert error:', recipeError);
         throw recipeError;
       }
+
+      console.log('[RecipeService] Recipe created with ID:', recipe.id);
 
       // Create corresponding entry in user_recipes table to link user to recipe
       const userRecipeData = {
@@ -161,11 +169,18 @@ export class RecipeService {
         .insert(userRecipeData);
 
       if (userRecipeError) {
-        console.error("Error creating user_recipes entry:", userRecipeError);
-        // Don't throw here - recipe is saved, just log the issue
+        console.error("[RecipeService] Error creating user_recipes entry:", userRecipeError);
+      }
+
+      // IMPORTANT: Return recipe immediately (don't wait for image optimization)
+      // Image optimization happens asynchronously in the background
+      // This ensures fast response to the user
+      if (recipe.image_url) {
+        RecipeService.optimizeRecipeImageAsync(recipe.id, recipe.image_url, userId);
       }
 
       return recipe;
+
     } catch (error) {
       console.error("Error saving recipe with auth:", error);
       
@@ -181,6 +196,129 @@ export class RecipeService {
       }
       
       throw error;
+    }
+  }
+
+  /**
+   * Async image optimization for recipes
+   * Runs in the background without blocking the main response
+   * Only for internal recipes (external recipes stream from source)
+   */
+  static async optimizeRecipeImageAsync(recipeId, imageUrl, userId) {
+    try {
+      // Don't await - fire and forget
+      setTimeout(async () => {
+        await RecipeService.optimizeAndStoreRecipeImage(recipeId, imageUrl, userId);
+      }, 100);
+    } catch (error) {
+      console.error('[RecipeService] Image optimization scheduling error:', error);
+      // Non-critical, don't throw
+    }
+  }
+
+  /**
+   * Download, optimize, and store recipe image
+   * Handles retry logic and fallback
+   */
+  static async optimizeAndStoreRecipeImage(recipeId, imageUrl, userId) {
+    let attempt = 0;
+    const maxAttempts = 3;
+
+    while (attempt < maxAttempts) {
+      try {
+        console.log(`[RecipeService] Optimizing image for recipe ${recipeId} (attempt ${attempt + 1})`);
+
+        // Step 1: Validate image URL
+        const isValid = await ImageOptimizationService.validateImageUrl(imageUrl);
+        if (!isValid) {
+          console.warn('[RecipeService] Image URL is not accessible:', imageUrl);
+          return;
+        }
+
+        // Step 2: Download and validate image
+        const imageData = await ImageOptimizationService.optimizeImageFromUrl(imageUrl);
+        
+        console.log('[RecipeService] Image downloaded:', {
+          size: ImageOptimizationService.formatFileSize(imageData.size),
+          type: imageData.contentType,
+          hash: imageData.fileHash.substring(0, 12) + '...'
+        });
+
+        // Step 3: Upload to Supabase Storage
+        const storagePath = `internal/${userId}/${recipeId}/${imageData.fileName}`;
+        const uploadResult = await ImageStorageService.uploadRecipeImage(
+          imageData.buffer,
+          recipeId,
+          imageData.fileName,
+          { contentType: imageData.contentType, storeType: 'internal' }
+        );
+
+        console.log('[RecipeService] Image uploaded to storage:', uploadResult.path);
+
+        // Step 4: Save image metadata to database
+        const metadata = await ImageStorageService.saveImageMetadata({
+          sourceUrl: imageUrl,
+          storagePath: uploadResult.path,
+          format: 'jpeg',
+          originalSize: imageData.size,
+          optimizedSize: imageData.size,
+          width: 400, // Standard width (would need sharp library for actual dimensions)
+          height: 300, // Standard height
+          fileHash: imageData.fileHash,
+          recipeId,
+          recipeType: 'internal'
+        });
+
+        console.log('[RecipeService] Image metadata saved');
+
+        // Step 5: Update recipe with storage path
+        const { error: updateError } = await supabase
+          .from('recipes')
+          .update({
+            image_storage_path: uploadResult.path,
+            image_width: 400,
+            image_height: 300,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', recipeId);
+
+        if (updateError) {
+          console.error('[RecipeService] Error updating recipe with storage path:', updateError);
+          return;
+        }
+
+        console.log('[RecipeService] Recipe updated with optimized image path');
+        return; // Success, exit retry loop
+
+      } catch (error) {
+        attempt++;
+        console.warn(`[RecipeService] Image optimization error (attempt ${attempt}):`, error.message);
+
+        if (attempt >= maxAttempts) {
+          console.error('[RecipeService] Image optimization failed after', maxAttempts, 'attempts');
+          // Non-critical, don't throw - recipe is already saved
+          return;
+        }
+
+        // Exponential backoff before retry
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+      }
+    }
+  }
+
+  /**
+   * Validate and clean image URL before saving
+   */
+  static async validateRecipeImageUrl(imageUrl) {
+    try {
+      if (!imageUrl) return null;
+
+      const isValid = await ImageOptimizationService.validateImageUrl(imageUrl);
+      return isValid ? imageUrl : null;
+
+    } catch (error) {
+      console.error('[RecipeService] Image URL validation error:', error);
+      return null;
     }
   }
 
@@ -280,53 +418,47 @@ export class RecipeService {
             throw new Error("Recipe not found");
         }
         
-        // Check user access if userId is provided
-        if (userId && recipe.created_by !== userId) {
-            // Check if user has access via user_recipes table
-            const { data: userRecipeAccess } = await supabaseAdmin
+        // Ensure user_recipes entry exists for ANY user accessing this recipe
+        // This allows users to cook recommended/shared recipes
+        if (userId) {
+            const { data: existingLink, error: linkError } = await supabaseAdmin
                 .from("user_recipes")
                 .select("recipe_id")
                 .eq("user_id", userId)
-                .eq("recipe_id", recipeId)
-                .single();
+                .eq("recipe_id", recipeId);
                 
-            if (!userRecipeAccess) {
-                throw new Error("Recipe not found or access denied");
-            }
-        }
-        
-        // Ensure user_recipes entry exists for the owner
-        if (userId && recipe.created_by === userId) {
-            const { data: existingLink } = await supabaseAdmin
-                .from("user_recipes")
-                .select("recipe_id")
-                .eq("user_id", userId)
-                .eq("recipe_id", recipeId)
-                .single();
-                
-            if (!existingLink) {
-                await supabaseAdmin
+            if (!linkError && (!existingLink || existingLink.length === 0)) {
+                // Create user_recipes entry for any recipe the user wants to cook
+                const { error: insertError } = await supabaseAdmin
                     .from("user_recipes")
                     .insert({
                         user_id: userId,
                         recipe_id: recipeId,
                         is_favorite: false,
                         cook_count: 0,
-                        saved_at: recipe.created_at || new Date().toISOString()
-                    });
+                        saved_at: new Date().toISOString()
+                    })
+                    .select();
+                
+                if (insertError && insertError.code !== '23505') { // 23505 is unique constraint violation
+                    console.warn(`Could not create user_recipes entry: ${insertError.message}`);
+                    // Continue anyway - recipe is still accessible
+                }
             }
         }
 
         // Get user specific data if logged in
         let userRecipeData = null;
         if (userId) {
-            const { data } = await supabaseAdmin
+            const { data, error } = await supabaseAdmin
                 .from("user_recipes")
                 .select("*")
                 .eq("user_id", userId)
-                .eq("recipe_id", recipeId)
-                .single();
-            userRecipeData = data;
+                .eq("recipe_id", recipeId);
+            
+            if (!error && data && data.length > 0) {
+                userRecipeData = data[0];
+            }
         }
         
         return {
