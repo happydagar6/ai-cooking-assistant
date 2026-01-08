@@ -304,6 +304,33 @@ export default function CookingModePage() {
         speakRecipeStep(currentInstruction, currentStep + 1)
         showToast.success("Repeating step", "Reading current step again")
       }
+    } else if (cmd.includes('ingredients') || cmd.includes('read ingredients')) {
+      // Handle ingredients command
+      if (!isMuted && ttsSupported && baseRecipe?.ingredients) {
+        triggerHapticFeedback('light')
+        // Pause voice recognition while TTS audio is playing
+        window.pauseVoiceRecognition?.();
+        
+        const ingredientsText = baseRecipe.ingredients.map(ingredient => 
+          typeof ingredient === 'string' 
+            ? ingredient 
+            : `${ingredient.amount || ''} ${ingredient.unit || ''} ${ingredient.name || ''}`.trim()
+        ).join(", ");
+        
+        const text = `You will need the following ingredients: ${ingredientsText}`;
+        speak(text, {
+          onStart: () => setIsPlaying(true),
+          onEnd: () => {
+            setIsPlaying(false);
+            // Resume voice recognition after TTS audio finishes
+            setTimeout(() => window.resumeVoiceRecognition?.(), 300);
+          }
+        });
+        showToast.success("Reading ingredients", "Listing all ingredients")
+        trackFeature('Text-to-Speech', { action: 'read_ingredients_voice_command' })
+      } else {
+        showToast.error("Audio Disabled", isMuted ? "Unmute to hear ingredients" : "Text-to-speech not supported")
+      }
     } else if (cmd.includes('start timer') || cmd.includes('set timer')) {
       const match = cmd.match(/(\d+)/)
       if (match) {
@@ -360,7 +387,7 @@ export default function CookingModePage() {
         trackFeature('Text-to-Speech', { action: 'stop_voice_command' })
       }
     }
-  }, [currentStep, baseRecipe, lastCommandTime, ttsSupported, speakRecipeStep, triggerHapticFeedback, isMuted, isSpeaking, stop, trackFeature])
+  }, [currentStep, baseRecipe, lastCommandTime, ttsSupported, speakRecipeStep, speak, triggerHapticFeedback, isMuted, isSpeaking, stop, trackFeature])
 
   const handleVoiceError = useCallback((error) => {
     console.error('Voice recognition error:', error)
