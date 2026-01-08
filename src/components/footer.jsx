@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ChefHat, Heart, Github, Mail, ArrowRight, Coffee } from 'lucide-react'
+import { ChefHat, Heart, Github, Mail, ArrowRight } from 'lucide-react'
 import { FeedbackDialog } from './feedback-dialog'
 
 export default function Footer() {
@@ -60,10 +60,6 @@ export default function Footer() {
                 <span className="group-hover:translate-x-0.5 transition-transform">Browse</span>
                 <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
               </Link>
-              <div className="flex items-center gap-1 px-2 py-1 bg-gray-50 rounded border border-gray-200">
-                <Coffee className="h-3 w-3 text-teal-600" />
-                <span className="text-xs text-gray-700 truncate">Kapil Dagar</span>
-              </div>
             </div>
           </div>
 
@@ -97,11 +93,27 @@ export default function Footer() {
         {/* Divider */}
         <div className="h-px bg-gray-200 mb-4" />
 
-        {/* Bottom Section - Compact */}
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-gray-600">
-          <p>
+        {/* Bottom Section */}
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+          <p className="text-xs text-gray-600">
             © {currentYear} <span className="font-semibold text-gray-900">CookAI</span> | Made with 🍳
           </p>
+          
+          {/* Built By Section - Interactive */}
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-gray-500">Built by</span>
+            <a
+              href="https://github.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-teal-50 to-cyan-50 border border-teal-200 hover:border-teal-400 text-xs font-semibold text-teal-700 hover:text-teal-900 transition-all duration-300 hover:shadow-md group"
+              title="Visit developer profile"
+            >
+              <span className="group-hover:scale-110 transition-transform">✨</span>
+              <span>Kapil Dagar</span>
+              <Github className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
+            </a>
+          </div>
         </div>
       </div>
     </footer>
