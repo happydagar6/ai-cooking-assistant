@@ -6,7 +6,6 @@ import { useTouchGestures } from "@/hooks/use-touch-gestures";
 import { PullToRefreshIndicator } from "@/components/pull-to-refresh";
 import { SwipeFeedback } from "@/components/swipe-feedback";
 import { RecipeNotes } from "@/components/recipe-notes";
-import { SimilarRecipesSection } from "@/components/similar-recipes-section";
 import { useAutoTrackView } from "@/hooks/use-recommendations";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { Button } from "@/components/ui/button"
@@ -1229,16 +1228,6 @@ export default function CookingModePage() {
                   />
                 </CardContent>
               </Card>
-            )}
-
-            {/* Similar Recipes Section */}
-            {recipe?.id && (
-              <div className="mt-8">
-                <SimilarRecipesSection 
-                  recipeId={recipe.id}
-                  className="w-full"
-                />
-              </div>
             )}
           </div>
         </div>

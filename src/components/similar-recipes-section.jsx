@@ -41,14 +41,14 @@ export function SimilarRecipesSection({ recipeId, className = '' }) {
   return (
     <div className={`${className}`}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-            <Sparkles className="h-4 w-4 text-white" />
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 bg-teal-600 rounded-lg flex items-center justify-center">
+            <Sparkles className="h-5 w-5 text-white" />
           </div>
           <div>
             <h3 className="text-lg font-bold text-gray-900">Similar Recipes</h3>
-            <p className="text-xs text-gray-600">You might also like these</p>
+            <p className="text-sm text-gray-700">You might also like these recipes</p>
           </div>
         </div>
 
@@ -202,11 +202,11 @@ function SimilarRecipeCard({ recipe, index, sourceRecipeId, isMobile = false, on
 
           {/* Recipe Info */}
           <div className="p-3 flex flex-col gap-2 flex-grow">
-            <h4 className="font-bold text-sm text-gray-900 line-clamp-2 hover:text-purple-600 transition-colors">
+            <h4 className="font-bold text-sm text-gray-900 line-clamp-2 hover:text-teal-600 transition-colors">
               {recipe.title}
             </h4>
 
-            <p className="text-xs text-gray-600 line-clamp-1">
+            <p className="text-xs text-gray-700 line-clamp-2">
               {recipe.description}
             </p>
 
@@ -269,22 +269,22 @@ function SimilarRecipeCard({ recipe, index, sourceRecipeId, isMobile = false, on
 
           {/* Recipe Info */}
           <div className="space-y-1">
-            <h4 className="font-bold text-sm text-gray-900 line-clamp-2 group-hover:text-purple-600 transition-colors">
+            <h4 className="font-bold text-sm text-gray-900 line-clamp-2 group-hover:text-teal-600 transition-colors">
               {recipe.title}
             </h4>
 
-            <p className="text-xs text-gray-600 line-clamp-1">
+            <p className="text-xs text-gray-700 line-clamp-2">
               {recipe.description}
             </p>
 
             {/* Stats */}
-            <div className="flex items-center gap-3 text-xs text-gray-600 pt-1">
+            <div className="flex items-center gap-3 text-xs text-gray-700 pt-1">
               <div className="flex items-center gap-1">
-                <Clock className="h-3 w-3 text-purple-500" />
+                <Clock className="h-3 w-3 text-teal-600" />
                 <span>{recipe.prep_time + recipe.cook_time}m</span>
               </div>
               <div className="flex items-center gap-1">
-                <Users className="h-3 w-3 text-purple-500" />
+                <Users className="h-3 w-3 text-teal-600" />
                 <span>{recipe.servings}</span>
               </div>
               <Badge variant="secondary" className="text-xs ml-auto">
