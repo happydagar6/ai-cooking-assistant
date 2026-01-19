@@ -376,16 +376,18 @@ export default function CookingModePage() {
         showToast.error("Audio Disabled", isMuted ? "Unmute to hear instructions" : "Text-to-speech not supported")
       }
     } else if (cmd.includes('pause') || cmd.includes('stop') || cmd.includes('quiet')) {
-      // Handle pause/stop command
-      if (isSpeaking) {
-        stop()
-        setIsPlaying(false)
-        triggerHapticFeedback('light')
-        // Resume voice recognition when audio is stopped
-        setTimeout(() => window.resumeVoiceRecognition?.(), 300);
-        showToast.success("Paused", "Audio paused")
-        trackFeature('Text-to-Speech', { action: 'stop_voice_command' })
-      }
+      // Handle pause/stop command - Always attempt to stop audio
+      stop()
+      setIsPlaying(false)
+      triggerHapticFeedback('light')
+      // Resume voice recognition when audio is stopped
+      setTimeout(() => window.resumeVoiceRecognition?.(), 300);
+      
+      // Show appropriate message based on command
+      const message = cmd.includes('stop') ? "Stopped" : "Paused"
+      const description = cmd.includes('stop') ? "Audio stopped" : "Audio paused successfully"
+      showToast.success(message, description)
+      trackFeature('Text-to-Speech', { action: 'stop_voice_command' })
     }
   }, [currentStep, baseRecipe, lastCommandTime, ttsSupported, speakRecipeStep, speak, triggerHapticFeedback, isMuted, isSpeaking, stop, trackFeature])
 
